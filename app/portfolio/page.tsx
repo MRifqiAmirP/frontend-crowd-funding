@@ -1,24 +1,30 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { motion } from "framer-motion"
-import { Search, Grid, List, Users, TrendingUp } from "lucide-react"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
-import { PageTransition } from "@/components/ui/page-transition"
-import PortfolioCard from "@/components/portfolio-card"
-import { getAllPortfolios } from "@/lib/portfolio-data"
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { Search, Grid, List, Users, TrendingUp } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { PageTransition } from "@/components/ui/page-transition";
+import PortfolioCard from "@/components/portfolio-card";
+import { getAllPortfolios } from "@/lib/portfolio-data";
 
 export default function PortfolioPage() {
-  const [searchQuery, setSearchQuery] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState("all")
-  const [selectedLocation, setSelectedLocation] = useState("all")
-  const [sortBy, setSortBy] = useState("rating")
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedLocation, setSelectedLocation] = useState("all");
+  const [sortBy, setSortBy] = useState("rating");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
-  const portfolios = getAllPortfolios()
+  const portfolios = getAllPortfolios();
 
   // Filter and search logic
   const filteredPortfolios = portfolios.filter((portfolio) => {
@@ -26,36 +32,41 @@ export default function PortfolioPage() {
       portfolio.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       portfolio.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       portfolio.bio.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      portfolio.skills.some((skill) => skill.toLowerCase().includes(searchQuery.toLowerCase()))
+      portfolio.skills.some((skill) =>
+        skill.toLowerCase().includes(searchQuery.toLowerCase())
+      );
 
     const matchesCategory =
       selectedCategory === "all" ||
       portfolio.title.toLowerCase().includes(selectedCategory.toLowerCase()) ||
-      portfolio.projects.some((project) => project.category === selectedCategory)
+      portfolio.projects.some(
+        (project) => project.category === selectedCategory
+      );
 
     const matchesLocation =
-      selectedLocation === "all" || portfolio.location.toLowerCase().includes(selectedLocation.toLowerCase())
+      selectedLocation === "all" ||
+      portfolio.location.toLowerCase().includes(selectedLocation.toLowerCase());
 
-    return matchesSearch && matchesCategory && matchesLocation
-  })
+    return matchesSearch && matchesCategory && matchesLocation;
+  });
 
   // Sort logic
   const sortedPortfolios = [...filteredPortfolios].sort((a, b) => {
     switch (sortBy) {
       case "rating":
-        return b.stats.rating - a.stats.rating
+        return b.stats.rating - a.stats.rating;
       case "projects":
-        return b.stats.completedProjects - a.stats.completedProjects
+        return b.stats.completedProjects - a.stats.completedProjects;
       case "followers":
-        return b.stats.followers - a.stats.followers
+        return b.stats.followers - a.stats.followers;
       case "funding":
-        return b.stats.totalFunding - a.stats.totalFunding
+        return b.stats.totalFunding - a.stats.totalFunding;
       case "name":
-        return a.name.localeCompare(b.name)
+        return a.name.localeCompare(b.name);
       default:
-        return 0
+        return 0;
     }
-  })
+  });
 
   const categories = [
     { value: "all", label: "Semua Kategori" },
@@ -64,7 +75,7 @@ export default function PortfolioPage() {
     { value: "designer", label: "Designer" },
     { value: "researcher", label: "Researcher" },
     { value: "social", label: "Social Impact" },
-  ]
+  ];
 
   const locations = [
     { value: "all", label: "Semua Lokasi" },
@@ -73,7 +84,7 @@ export default function PortfolioPage() {
     { value: "yogyakarta", label: "Yogyakarta" },
     { value: "bali", label: "Bali" },
     { value: "solo", label: "Solo" },
-  ]
+  ];
 
   const sortOptions = [
     { value: "rating", label: "Rating Tertinggi" },
@@ -81,7 +92,7 @@ export default function PortfolioPage() {
     { value: "followers", label: "Followers Terbanyak" },
     { value: "funding", label: "Funding Terbesar" },
     { value: "name", label: "Nama A-Z" },
-  ]
+  ];
 
   return (
     <PageTransition>
@@ -94,10 +105,13 @@ export default function PortfolioPage() {
             transition={{ duration: 0.6 }}
             className="text-center mb-12"
           >
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Portfolio Siswa</h1>
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+              Portfolio Siswa
+            </h1>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
-              Temukan talenta muda Indonesia yang berprestasi. Jelajahi portfolio, proyek, dan pencapaian dari
-              siswa-siswa terbaik di berbagai bidang.
+              Temukan talenta muda Indonesia yang berprestasi. Jelajahi
+              portfolio, proyek, dan pencapaian dari siswa-siswa terbaik di
+              berbagai bidang.
             </p>
 
             {/* Stats */}
@@ -106,7 +120,9 @@ export default function PortfolioPage() {
                 <div className="flex items-center justify-center mb-2">
                   <Users className="h-6 w-6 text-blue-600" />
                 </div>
-                <p className="text-2xl font-bold text-gray-900">{portfolios.length}</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {portfolios.length}
+                </p>
                 <p className="text-sm text-gray-600">Portfolio Aktif</p>
               </div>
               <div className="bg-white rounded-lg p-4 shadow-sm">
@@ -114,7 +130,10 @@ export default function PortfolioPage() {
                   <TrendingUp className="h-6 w-6 text-green-600" />
                 </div>
                 <p className="text-2xl font-bold text-gray-900">
-                  {portfolios.reduce((sum, p) => sum + p.stats.completedProjects, 0)}
+                  {portfolios.reduce(
+                    (sum, p) => sum + p.stats.completedProjects,
+                    0
+                  )}
                 </p>
                 <p className="text-sm text-gray-600">Total Proyek</p>
               </div>
@@ -123,7 +142,11 @@ export default function PortfolioPage() {
                   <TrendingUp className="h-6 w-6 text-purple-600" />
                 </div>
                 <p className="text-2xl font-bold text-gray-900">
-                  Rp{portfolios.reduce((sum, p) => sum + p.stats.totalFunding, 0).toFixed(1)}M
+                  Rp
+                  {portfolios
+                    .reduce((sum, p) => sum + p.stats.totalFunding, 0)
+                    .toFixed(1)}
+                  M
                 </p>
                 <p className="text-sm text-gray-600">Total Funding</p>
               </div>
@@ -132,7 +155,9 @@ export default function PortfolioPage() {
                   <Users className="h-6 w-6 text-orange-600" />
                 </div>
                 <p className="text-2xl font-bold text-gray-900">
-                  {portfolios.reduce((sum, p) => sum + p.stats.followers, 0).toLocaleString()}
+                  {portfolios
+                    .reduce((sum, p) => sum + p.stats.followers, 0)
+                    .toLocaleString()}
                 </p>
                 <p className="text-sm text-gray-600">Total Followers</p>
               </div>
@@ -158,8 +183,11 @@ export default function PortfolioPage() {
 
             {/* Filters */}
             <div className="flex flex-wrap gap-4 items-center">
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger className="w-48">
+              <Select
+                value={selectedCategory}
+                onValueChange={setSelectedCategory}
+              >
+                <SelectTrigger className="sm:w-48">
                   <SelectValue placeholder="Kategori" />
                 </SelectTrigger>
                 <SelectContent>
@@ -171,8 +199,11 @@ export default function PortfolioPage() {
                 </SelectContent>
               </Select>
 
-              <Select value={selectedLocation} onValueChange={setSelectedLocation}>
-                <SelectTrigger className="w-48">
+              <Select
+                value={selectedLocation}
+                onValueChange={setSelectedLocation}
+              >
+                <SelectTrigger className="sm:w-48">
                   <SelectValue placeholder="Lokasi" />
                 </SelectTrigger>
                 <SelectContent>
@@ -185,7 +216,7 @@ export default function PortfolioPage() {
               </Select>
 
               <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-48">
+                <SelectTrigger className="sm:w-48">
                   <SelectValue placeholder="Urutkan" />
                 </SelectTrigger>
                 <SelectContent>
@@ -220,12 +251,17 @@ export default function PortfolioPage() {
           </div>
 
           {/* Active Filters */}
-          {(searchQuery || selectedCategory !== "all" || selectedLocation !== "all") && (
+          {(searchQuery ||
+            selectedCategory !== "all" ||
+            selectedLocation !== "all") && (
             <div className="flex flex-wrap gap-2 mt-4">
               {searchQuery && (
                 <Badge variant="secondary" className="flex items-center gap-1">
                   Pencarian: "{searchQuery}"
-                  <button onClick={() => setSearchQuery("")} className="ml-1 hover:bg-gray-200 rounded-full p-0.5">
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="ml-1 hover:bg-gray-200 rounded-full p-0.5"
+                  >
                     ×
                   </button>
                 </Badge>
@@ -261,7 +297,9 @@ export default function PortfolioPage() {
       <section className="py-16">
         <div className="container mx-auto px-4 md:px-6">
           <div className="flex justify-between items-center mb-8">
-            <h2 className="text-2xl font-bold">{sortedPortfolios.length} Portfolio Ditemukan</h2>
+            <h2 className="text-2xl font-bold">
+              {sortedPortfolios.length} Portfolio Ditemukan
+            </h2>
           </div>
 
           {sortedPortfolios.length === 0 ? (
@@ -269,13 +307,17 @@ export default function PortfolioPage() {
               <div className="text-gray-400 mb-4">
                 <Users className="h-16 w-16 mx-auto" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-600 mb-2">Tidak ada portfolio yang ditemukan</h3>
-              <p className="text-gray-500 mb-4">Coba ubah filter pencarian atau kata kunci Anda</p>
+              <h3 className="text-xl font-semibold text-gray-600 mb-2">
+                Tidak ada portfolio yang ditemukan
+              </h3>
+              <p className="text-gray-500 mb-4">
+                Coba ubah filter pencarian atau kata kunci Anda
+              </p>
               <Button
                 onClick={() => {
-                  setSearchQuery("")
-                  setSelectedCategory("all")
-                  setSelectedLocation("all")
+                  setSearchQuery("");
+                  setSelectedCategory("all");
+                  setSelectedLocation("all");
                 }}
               >
                 Reset Filter
@@ -286,7 +328,11 @@ export default function PortfolioPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.6 }}
-              className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-6"}
+              className={
+                viewMode === "grid"
+                  ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                  : "space-y-6"
+              }
             >
               {sortedPortfolios.map((portfolio, index) => (
                 <PortfolioCard
@@ -313,5 +359,5 @@ export default function PortfolioPage() {
         </div>
       </section>
     </PageTransition>
-  )
+  );
 }
