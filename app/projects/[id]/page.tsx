@@ -1,24 +1,32 @@
-"use client"
+"use client";
 
-import Image from "next/image"
-import Link from "next/link"
-import { Share2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { PageTransition } from "@/components/ui/page-transition"
-import DonationForm from "@/components/donation-form"
-import ProjectUpdates from "@/components/project-updates"
-import ProjectComments from "@/components/project-comments"
-import VideoPlayer from "@/components/video-player"
-import ImageGallery from "@/components/image-gallery"
-import { featuredProjects } from "@/lib/dummy-data"
-import RealTimeFunding from "@/components/real-time-funding"
+import Image from "next/image";
+import Link from "next/link";
+import { Share2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PageTransition } from "@/components/ui/page-transition";
+import DonationForm from "@/components/donation-form";
+import ProjectUpdates from "@/components/project-updates";
+import ProjectComments from "@/components/project-comments";
+import VideoPlayer from "@/components/video-player";
+import ImageGallery from "@/components/image-gallery";
+import { featuredProjects } from "@/lib/dummy-data";
+import RealTimeFunding from "@/components/real-time-funding";
 
-export default function ProjectDetailPage({ params }: { params: { id: string } }) {
+export default function ProjectDetailPage({
+  params,
+}: {
+  params: { id: string };
+}) {
   // Find project from dummy data
-  const project = featuredProjects.find((p) => p.id === params.id) || featuredProjects[0]
+  const project =
+    featuredProjects.find((p) => p.id === params.id) || featuredProjects[0];
 
-  const percentFunded = Math.min(Math.round((project.currentFunding / project.targetFunding) * 100), 100)
+  const percentFunded = Math.min(
+    Math.round((project.currentFunding / project.targetFunding) * 100),
+    100
+  );
 
   // Format currency to IDR
   const formatCurrency = (amount: number) => {
@@ -27,8 +35,8 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
       currency: "IDR",
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
-    }).format(amount)
-  }
+    }).format(amount);
+  };
 
   const rewards = [
     {
@@ -42,17 +50,19 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
       id: "2",
       title: "Early Bird",
       amount: 100000,
-      description: "1 produk edisi khusus + ucapan terima kasih di media sosial",
+      description:
+        "1 produk edisi khusus + ucapan terima kasih di media sosial",
       backers: 20,
     },
     {
       id: "3",
       title: "Premium Bundle",
       amount: 250000,
-      description: "3 produk edisi khusus + nama Anda di website kami sebagai pendukung",
+      description:
+        "3 produk edisi khusus + nama Anda di website kami sebagai pendukung",
       backers: 7,
     },
-  ]
+  ];
 
   return (
     <PageTransition>
@@ -69,15 +79,21 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
 
             <div className="mb-6">
               <VideoPlayer
-                videoUrl={project.video || "https://www.youtube.com/embed/Iqr3XIhSnUQ"}
+                videoUrl={
+                  project.video || "https://www.youtube.com/embed/Iqr3XIhSnUQ"
+                }
                 thumbnailUrl={project.image}
                 title={project.title}
               />
             </div>
 
             <div className="flex flex-wrap gap-2 mb-6">
-              <span className="bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full">{project.category}</span>
-              <span className="bg-gray-100 text-gray-800 text-sm px-3 py-1 rounded-full">{project.school}</span>
+              <span className="bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full">
+                {project.category}
+              </span>
+              <span className="bg-gray-100 text-gray-800 text-sm px-3 py-1 rounded-full">
+                {project.school}
+              </span>
             </div>
 
             <Tabs defaultValue="deskripsi">
@@ -90,16 +106,24 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
 
               <TabsContent value="deskripsi">
                 <div className="prose max-w-none">
-                  <p className="text-lg text-gray-700 mb-6">{project.description}</p>
-
-                  <h3 className="text-xl font-semibold mb-4">Tentang Proyek Ini</h3>
-                  <p className="mb-4">
-                    Proyek ini merupakan inovasi yang dikembangkan oleh tim {project.creator.name} dengan tujuan
-                    memberikan solusi nyata untuk permasalahan yang ada di masyarakat. Dengan pendekatan yang
-                    berkelanjutan dan ramah lingkungan, kami berkomitmen untuk menciptakan dampak positif.
+                  <p className="text-lg text-gray-700 mb-6">
+                    {project.description}
                   </p>
 
-                  <h3 className="text-xl font-semibold mb-4">Rencana Penggunaan Dana</h3>
+                  <h3 className="text-xl font-semibold mb-4">
+                    Tentang Proyek Ini
+                  </h3>
+                  <p className="mb-4">
+                    Proyek ini merupakan inovasi yang dikembangkan oleh tim{" "}
+                    {project.creator.name} dengan tujuan memberikan solusi nyata
+                    untuk permasalahan yang ada di masyarakat. Dengan pendekatan
+                    yang berkelanjutan dan ramah lingkungan, kami berkomitmen
+                    untuk menciptakan dampak positif.
+                  </p>
+
+                  <h3 className="text-xl font-semibold mb-4">
+                    Rencana Penggunaan Dana
+                  </h3>
                   <ul className="list-disc pl-6 mb-4">
                     <li>Pengembangan produk dan riset: 40%</li>
                     <li>Pemasaran dan promosi: 25%</li>
@@ -107,11 +131,14 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
                     <li>Tim dan sumber daya manusia: 15%</li>
                   </ul>
 
-                  <h3 className="text-xl font-semibold mb-4">Target dan Milestone</h3>
+                  <h3 className="text-xl font-semibold mb-4">
+                    Target dan Milestone
+                  </h3>
                   <p className="mb-4">
-                    Dengan dukungan Anda, kami menargetkan untuk mencapai milestone penting dalam 6 bulan ke depan,
-                    termasuk peluncuran produk beta, kerjasama dengan mitra strategis, dan ekspansi ke pasar yang lebih
-                    luas.
+                    Dengan dukungan Anda, kami menargetkan untuk mencapai
+                    milestone penting dalam 6 bulan ke depan, termasuk
+                    peluncuran produk beta, kerjasama dengan mitra strategis,
+                    dan ekspansi ke pasar yang lebih luas.
                   </p>
                 </div>
               </TabsContent>
@@ -119,7 +146,10 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
               <TabsContent value="galeri">
                 <div className="space-y-6">
                   <h3 className="text-xl font-semibold">Galeri Proyek</h3>
-                  <ImageGallery images={project.gallery || []} title={project.title} />
+                  <ImageGallery
+                    images={project.gallery || []}
+                    title={project.title}
+                  />
                 </div>
               </TabsContent>
 
@@ -134,13 +164,20 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
           </div>
 
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-md p-6 mb-6 sticky top-24">
-              <RealTimeFunding projectId={project.id} showRecentDonations={true} compact={false} />
+            <div className="bg-white rounded-lg shadow-md p-6 mb-6 top-24">
+              <RealTimeFunding
+                projectId={project.id}
+                showRecentDonations={true}
+                compact={false}
+              />
 
               <DonationForm projectId={project.id} rewards={rewards} />
 
               <div className="mt-4">
-                <Button variant="outline" className="w-full flex items-center justify-center gap-2">
+                <Button
+                  variant="outline"
+                  className="w-full flex items-center justify-center gap-2"
+                >
                   <Share2 className="h-4 w-4" />
                   Bagikan Proyek
                 </Button>
@@ -160,10 +197,14 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
                 </div>
                 <div>
                   <h4 className="font-semibold">{project.creator.name}</h4>
-                  <p className="text-sm text-gray-600">{project.creator.projects} proyek</p>
+                  <p className="text-sm text-gray-600">
+                    {project.creator.projects} proyek
+                  </p>
                 </div>
               </div>
-              <p className="text-sm text-gray-700 mb-4">{project.creator.bio}</p>
+              <p className="text-sm text-gray-700 mb-4">
+                {project.creator.bio}
+              </p>
               <Button variant="outline" className="w-full">
                 Hubungi Kreator
               </Button>
@@ -172,5 +213,5 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
         </div>
       </div>
     </PageTransition>
-  )
+  );
 }
