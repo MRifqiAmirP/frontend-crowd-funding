@@ -1,12 +1,12 @@
-"use client"
+"use client";
 
-import Image from "next/image"
-import Link from "next/link"
-import { motion } from "framer-motion"
-import { PageTransition } from "@/components/ui/page-transition"
-import { MotionButton } from "@/components/ui/motion-button"
-import { MotionCard } from "@/components/ui/motion-card"
-import { CheckCircle2, Heart, Mail, MapPin, Phone } from "lucide-react"
+import Image from "next/image";
+import Link from "next/link";
+import { motion } from "framer-motion";
+import { PageTransition } from "@/components/ui/page-transition";
+import { MotionButton } from "@/components/ui/motion-button";
+import { MotionCard } from "@/components/ui/motion-card";
+import { CheckCircle2, Heart, Mail, MapPin, Phone } from "lucide-react";
 
 export default function AboutPage() {
   const teamMembers = [
@@ -14,21 +14,23 @@ export default function AboutPage() {
       name: "Muhammad Lutfi Kurniawan",
       role: "Co-Founder & CEO",
       image: "/images/team/lutfi.png",
-      
+    },
+    {
+      name: "Muhammad Rifqi Amir Putra",
+      role: "Co-Founder & COO",
+      image: "/images/team/rifki.jpeg",
     },
     {
       name: "Bima Saputra",
       role: "Co-Founder & COO",
       image: "/images/team/bima.jpg",
-      
     },
     {
       name: "Mutiara Syafitri",
       role: "Co-Founder & CFO",
       image: "/images/team/mutiara.jpeg",
-      
     },
-  ]
+  ];
 
   const partners = [
     {
@@ -55,7 +57,7 @@ export default function AboutPage() {
       name: "Telkom Indonesia",
       logo: "/placeholder.svg?height=100&width=200",
     },
-  ]
+  ];
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -65,7 +67,7 @@ export default function AboutPage() {
         staggerChildren: 0.1,
       },
     },
-  }
+  };
 
   const itemVariants = {
     hidden: { y: 20, opacity: 0 },
@@ -78,7 +80,7 @@ export default function AboutPage() {
         damping: 20,
       },
     },
-  }
+  };
 
   return (
     <PageTransition>
@@ -99,8 +101,8 @@ export default function AboutPage() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="text-xl max-w-2xl mx-auto"
           >
-            Platform crowdfunding pertama di Indonesia yang didedikasikan untuk mendukung proyek Riset dan Penelitian pelajar
-            dan mahasiswa
+            Platform crowdfunding pertama di Indonesia yang didedikasikan untuk
+            mendukung proyek Riset dan Penelitian pelajar dan mahasiswa
           </motion.p>
         </div>
       </section>
@@ -119,19 +121,28 @@ export default function AboutPage() {
               <h2 className="text-3xl font-bold mb-6">Cerita Kami</h2>
               <div className="space-y-4 text-gray-700">
                 <p>
-                  <b>ProyekSiswa.id</b> berawal dari keprihatinan kami terhadap banyaknya ide riset inovatif dan ide penelitian dari pelajar dan
-                  mahasiswa yang tidak bisa terealisasi karena keterbatasan dana dan dukungan.
+                  <b>ProyekSiswa.id</b> berawal dari keprihatinan kami terhadap
+                  banyaknya ide riset inovatif dan ide penelitian dari pelajar
+                  dan mahasiswa yang tidak bisa terealisasi karena keterbatasan
+                  dana dan dukungan.
                 </p>
                 <p>
-                  Didirikan pada tahun 2025 oleh sekelompok mahasiswa perguruan tinggi yang memiliki passion di bidang
-                  Riset, Penelitian dan Pendidikan. <b>ProyekSiswa.id hadir sebagai jembatan antara ide brilian anak muda
-                  Indonesia dengan sumber daya yang mereka butuhkan</b>.
+                  Didirikan pada tahun 2025 oleh sekelompok mahasiswa perguruan
+                  tinggi yang memiliki passion di bidang Riset, Penelitian dan
+                  Pendidikan.{" "}
+                  <b>
+                    ProyekSiswa.id hadir sebagai jembatan antara ide brilian
+                    anak muda Indonesia dengan sumber daya yang mereka butuhkan
+                  </b>
+                  .
                 </p>
                 <p>
-                  Kami percaya bahwa generasi muda Indonesia memiliki potensi luar biasa untuk menciptakan solusi
-                  inovatif bagi berbagai permasalahan di sekitar mereka. Melalui platform ini, kami ingin memastikan
-                  bahwa tidak ada ide brilian yang terbuang sia-sia hanya karena keterbatasan akses terhadap pendanaan
-                  dan bimbingan.
+                  Kami percaya bahwa generasi muda Indonesia memiliki potensi
+                  luar biasa untuk menciptakan solusi inovatif bagi berbagai
+                  permasalahan di sekitar mereka. Melalui platform ini, kami
+                  ingin memastikan bahwa tidak ada ide brilian yang terbuang
+                  sia-sia hanya karena keterbatasan akses terhadap pendanaan dan
+                  bimbingan.
                 </p>
               </div>
             </motion.div>
@@ -166,7 +177,8 @@ export default function AboutPage() {
           >
             <h2 className="text-3xl font-bold mb-4">Visi & Misi Kami</h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              Kami berkomitmen untuk mendukung riset dan penelitian pelajar di Indonesia
+              Kami berkomitmen untuk mendukung riset dan penelitian pelajar di
+              Indonesia
             </p>
           </motion.div>
 
@@ -178,7 +190,9 @@ export default function AboutPage() {
                 </div>
                 <h3 className="text-xl font-semibold mb-4">Visi</h3>
                 <p className="text-gray-700">
-                Menjadi platform utama penggerak inovasi pendidikan di Indonesia melalui pendanaan terbuka dan kolaboratif bagi pelajar dan mahasiswa.
+                  Menjadi platform utama penggerak inovasi pendidikan di
+                  Indonesia melalui pendanaan terbuka dan kolaboratif bagi
+                  pelajar dan mahasiswa.
                 </p>
                 {/* <ul className="mt-6 space-y-2 text-left">
                   {[
@@ -210,8 +224,9 @@ export default function AboutPage() {
                 </div>
                 <h3 className="text-xl font-semibold mb-4">Misi</h3>
                 <p className="text-gray-700">
-                Menyediakan platform yang aman, transparan, dan inklusif untuk memfasilitasi pendanaan dan
-                  pengembangan proyek Riset dan Penelitian pelajar dan mahasiswa di seluruh Indonesia.
+                  Menyediakan platform yang aman, transparan, dan inklusif untuk
+                  memfasilitasi pendanaan dan pengembangan proyek Riset dan
+                  Penelitian pelajar dan mahasiswa di seluruh Indonesia.
                 </p>
                 <ul className="mt-6 space-y-2 text-left">
                   {[
@@ -251,7 +266,8 @@ export default function AboutPage() {
           >
             <h2 className="text-3xl font-bold mb-4">Tim Kami</h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              Kenali orang-orang di balik ProyekSiswa.id yang berdedikasi untuk mendukung Peneliti muda Indonesia
+              Kenali orang-orang di balik ProyekSiswa.id yang berdedikasi untuk
+              mendukung Peneliti muda Indonesia
             </p>
           </motion.div>
 
@@ -260,7 +276,7 @@ export default function AboutPage() {
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
-            className="flex justify-center gap-8" // Ubah dari grid ke flex dan tambahkan justify-center
+            className="flex flex-wrap justify-center gap-8" // Ubah dari grid ke flex dan tambahkan justify-center
           >
             {teamMembers.map((member, index) => (
               <motion.div
@@ -270,7 +286,12 @@ export default function AboutPage() {
                 className="bg-white rounded-lg shadow-md overflow-hidden w-80" // Tambahkan lebar tetap agar kartu seragam
               >
                 <div className="relative h-64">
-                  <Image src={member.image || "/placeholder.svg"} alt={member.name} fill className="object-cover" />
+                  <Image
+                    src={member.image || "/placeholder.svg"}
+                    alt={member.name}
+                    fill
+                    className="object-cover"
+                  />
                 </div>
                 <div className="p-6">
                   <h3 className="text-xl font-semibold">{member.name}</h3>
@@ -281,7 +302,7 @@ export default function AboutPage() {
           </motion.div>
         </div>
       </section>
-            {/* Partners */}
+      {/* Partners */}
       <section className="py-16 bg-gray-50">
         <div className="container mx-auto px-4 md:px-6">
           <motion.div
@@ -293,7 +314,8 @@ export default function AboutPage() {
           >
             <h2 className="text-3xl font-bold mb-4">Mitra Kami</h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              Kami berkolaborasi dengan berbagai institusi dan organisasi untuk mendukung Riseter dan Peneliti muda
+              Kami berkolaborasi dengan berbagai institusi dan organisasi untuk
+              mendukung Riseter dan Peneliti muda
             </p>
           </motion.div>
 
@@ -336,7 +358,8 @@ export default function AboutPage() {
           >
             <h2 className="text-3xl font-bold mb-4">Hubungi Kami</h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              Punya pertanyaan atau ingin berkolaborasi? Jangan ragu untuk menghubungi kami
+              Punya pertanyaan atau ingin berkolaborasi? Jangan ragu untuk
+              menghubungi kami
             </p>
           </motion.div>
 
@@ -386,20 +409,29 @@ export default function AboutPage() {
           transition={{ duration: 0.6 }}
           className="container mx-auto px-4 md:px-6 text-center"
         >
-          <h2 className="text-3xl font-bold mb-4">Bergabunglah dengan Komunitas Kami</h2>
+          <h2 className="text-3xl font-bold mb-4">
+            Bergabunglah dengan Komunitas Kami
+          </h2>
           <p className="text-xl mb-8 max-w-2xl mx-auto">
             Jadilah bagian dari gerakan mendukung Peneliti muda Indonesia
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <MotionButton size="lg" className="bg-white text-blue-700 hover:bg-gray-100">
+            <MotionButton
+              size="lg"
+              className="bg-white text-blue-700 hover:bg-gray-100"
+            >
               <Link href="/register">Daftar Sekarang</Link>
             </MotionButton>
-            <MotionButton size="lg" variant="outline" className="border-white text-blue-700 hover:bg-white/10">
+            <MotionButton
+              size="lg"
+              variant="outline"
+              className="border-white text-blue-700 hover:bg-white/10"
+            >
               <Link href="/projects">Jelajahi Proyek</Link>
             </MotionButton>
           </div>
         </motion.div>
       </section>
     </PageTransition>
-  )
+  );
 }
