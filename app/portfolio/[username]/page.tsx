@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Image from "next/image"
-import Link from "next/link"
-import { motion } from "framer-motion"
+import { useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { motion } from "framer-motion";
 import {
   Calendar,
   MapPin,
@@ -24,35 +24,41 @@ import {
   Eye,
   Youtube,
   ExternalLink,
-} from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card, CardContent } from "@/components/ui/card"
-import { PageTransition } from "@/components/ui/page-transition"
-import { MotionButton } from "@/components/ui/motion-button"
-import VideoPlayer from "@/components/video-player"
-import { getPortfolioByUsername } from "@/lib/portfolio-data"
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
+import { PageTransition } from "@/components/ui/page-transition";
+import { MotionButton } from "@/components/ui/motion-button";
+import VideoPlayer from "@/components/video-player";
+import { getPortfolioByUsername } from "@/lib/portfolio-data";
 
-export default function PortfolioPage({ params }: { params: { username: string } }) {
-  const [activeFilter, setActiveFilter] = useState("all")
-  const [selectedCategory, setSelectedCategory] = useState("all")
+export default function PortfolioPage({
+  params,
+}: {
+  params: { username: string };
+}) {
+  const [activeFilter, setActiveFilter] = useState("all");
+  const [selectedCategory, setSelectedCategory] = useState("all");
 
   // Get portfolio data
-  const portfolio = getPortfolioByUsername(params.username)
+  const portfolio = getPortfolioByUsername(params.username);
 
   if (!portfolio) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Portfolio Tidak Ditemukan</h1>
-          <p className="text-gray-600 mb-4">Portfolio dengan username "{params.username}" tidak ditemukan.</p>
+          <p className="text-gray-600 mb-4">
+            Portfolio dengan username "{params.username}" tidak ditemukan.
+          </p>
           <Button asChild>
             <Link href="/portfolio">Kembali ke Portfolio</Link>
           </Button>
         </div>
       </div>
-    )
+    );
   }
 
   const containerVariants = {
@@ -63,7 +69,7 @@ export default function PortfolioPage({ params }: { params: { username: string }
         staggerChildren: 0.1,
       },
     },
-  }
+  };
 
   const itemVariants = {
     hidden: { y: 20, opacity: 0 },
@@ -76,21 +82,24 @@ export default function PortfolioPage({ params }: { params: { username: string }
         damping: 20,
       },
     },
-  }
+  };
 
   const filteredProjects = portfolio.projects.filter(
-    (project) => selectedCategory === "all" || project.category === selectedCategory,
-  )
+    (project) =>
+      selectedCategory === "all" || project.category === selectedCategory
+  );
 
-  const filteredMedia = portfolio.mediaGallery.filter((media) => activeFilter === "all" || media.type === activeFilter)
+  const filteredMedia = portfolio.mediaGallery.filter(
+    (media) => activeFilter === "all" || media.type === activeFilter
+  );
 
   const handleDownloadCV = () => {
     // Simulate CV download
-    const link = document.createElement("a")
-    link.href = `/cv/${portfolio.username}-cv.pdf`
-    link.download = `${portfolio.name}-CV.pdf`
-    link.click()
-  }
+    const link = document.createElement("a");
+    link.href = `/cv/${portfolio.username}-cv.pdf`;
+    link.download = `${portfolio.name}-CV.pdf`;
+    link.click();
+  };
 
   return (
     <PageTransition>
@@ -99,7 +108,9 @@ export default function PortfolioPage({ params }: { params: { username: string }
         <div className="absolute inset-0 bg-black/20" />
         <div className="absolute inset-0">
           <Image
-            src={portfolio.coverImage || "/placeholder.svg?height=600&width=1200"}
+            src={
+              portfolio.coverImage || "/placeholder.svg?height=600&width=1200"
+            }
             alt="Cover"
             fill
             className="object-cover opacity-30"
@@ -121,7 +132,10 @@ export default function PortfolioPage({ params }: { params: { username: string }
             >
               <div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-white/20 shadow-2xl">
                 <Image
-                  src={portfolio.profileImage || "/placeholder.svg?height=400&width=400"}
+                  src={
+                    portfolio.profileImage ||
+                    "/placeholder.svg?height=400&width=400"
+                  }
                   alt={portfolio.name}
                   fill
                   className="object-cover"
@@ -167,7 +181,11 @@ export default function PortfolioPage({ params }: { params: { username: string }
                 className="flex flex-wrap gap-2 mb-6"
               >
                 {portfolio.skills.slice(0, 5).map((skill, index) => (
-                  <Badge key={index} variant="secondary" className="bg-white/20 text-white border-white/30">
+                  <Badge
+                    key={index}
+                    variant="secondary"
+                    className="bg-white/20 text-white border-white/30"
+                  >
                     {skill}
                   </Badge>
                 ))}
@@ -179,7 +197,10 @@ export default function PortfolioPage({ params }: { params: { username: string }
                 transition={{ duration: 0.6, delay: 0.7 }}
                 className="flex flex-wrap gap-4"
               >
-                <MotionButton size="lg" className="bg-white text-blue-700 hover:bg-gray-100">
+                <MotionButton
+                  size="lg"
+                  className="bg-white text-blue-700 hover:bg-gray-100"
+                >
                   <Mail className="h-4 w-4 mr-2" />
                   Hubungi Saya
                 </MotionButton>
@@ -204,10 +225,26 @@ export default function PortfolioPage({ params }: { params: { username: string }
             className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-16 bg-white/10 backdrop-blur-sm rounded-xl p-6"
           >
             {[
-              { label: "Proyek Selesai", value: portfolio.stats.completedProjects, icon: Award },
-              { label: "Total Pendanaan", value: `Rp${portfolio.stats.totalFunding}M`, icon: TrendingUp },
-              { label: "Followers", value: portfolio.stats.followers, icon: Users },
-              { label: "Rating", value: `${portfolio.stats.rating}/5`, icon: Star },
+              {
+                label: "Proyek Selesai",
+                value: portfolio.stats.completedProjects,
+                icon: Award,
+              },
+              {
+                label: "Total Pendanaan",
+                value: `Rp${portfolio.stats.totalFunding}M`,
+                icon: TrendingUp,
+              },
+              {
+                label: "Followers",
+                value: portfolio.stats.followers,
+                icon: Users,
+              },
+              {
+                label: "Rating",
+                value: `${portfolio.stats.rating}/5`,
+                icon: Star,
+              },
             ].map((stat, index) => (
               <motion.div
                 key={index}
@@ -255,7 +292,9 @@ export default function PortfolioPage({ params }: { params: { username: string }
                   ].map((category) => (
                     <Button
                       key={category}
-                      variant={selectedCategory === category ? "default" : "outline"}
+                      variant={
+                        selectedCategory === category ? "default" : "outline"
+                      }
                       size="sm"
                       onClick={() => setSelectedCategory(category)}
                       className="capitalize"
@@ -277,7 +316,10 @@ export default function PortfolioPage({ params }: { params: { username: string }
                     <Card className="overflow-hidden hover:shadow-lg transition-shadow">
                       <div className="relative h-48">
                         <Image
-                          src={project.image || "/placeholder.svg?height=300&width=400"}
+                          src={
+                            project.image ||
+                            "/placeholder.svg?height=300&width=400"
+                          }
                           alt={project.title}
                           fill
                           className="object-cover"
@@ -290,8 +332,12 @@ export default function PortfolioPage({ params }: { params: { username: string }
                         </div>
                       </div>
                       <CardContent className="p-4">
-                        <h3 className="font-semibold mb-2 line-clamp-2">{project.title}</h3>
-                        <p className="text-sm text-gray-600 mb-3 line-clamp-2">{project.description}</p>
+                        <h3 className="font-semibold mb-2 line-clamp-2">
+                          {project.title}
+                        </h3>
+                        <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                          {project.description}
+                        </p>
 
                         <div className="flex justify-between items-center text-sm text-gray-500 mb-3">
                           <span className="flex items-center">
@@ -306,7 +352,11 @@ export default function PortfolioPage({ params }: { params: { username: string }
 
                         <div className="flex flex-wrap gap-1 mb-3">
                           {project.technologies.slice(0, 3).map((tech, idx) => (
-                            <Badge key={idx} variant="secondary" className="text-xs">
+                            <Badge
+                              key={idx}
+                              variant="secondary"
+                              className="text-xs"
+                            >
                               {tech}
                             </Badge>
                           ))}
@@ -346,7 +396,13 @@ export default function PortfolioPage({ params }: { params: { username: string }
                       onClick={() => setActiveFilter(type)}
                       className="capitalize"
                     >
-                      {type === "all" ? "Semua" : type === "image" ? "Foto" : type === "video" ? "Video" : "Dokumen"}
+                      {type === "all"
+                        ? "Semua"
+                        : type === "image"
+                        ? "Foto"
+                        : type === "video"
+                        ? "Video"
+                        : "Dokumen"}
                     </Button>
                   ))}
                 </div>
@@ -361,12 +417,19 @@ export default function PortfolioPage({ params }: { params: { username: string }
                 {filteredMedia.map((media, index) => (
                   <motion.div key={media.id} variants={itemVariants}>
                     {media.type === "video" ? (
-                      <VideoPlayer videoUrl={media.url} thumbnailUrl={media.thumbnail} title={media.title} />
+                      <VideoPlayer
+                        videoUrl={media.url}
+                        thumbnailUrl={media.thumbnail}
+                        title={media.title}
+                      />
                     ) : media.type === "image" ? (
                       <div className="relative group cursor-pointer">
                         <div className="relative h-64 rounded-lg overflow-hidden">
                           <Image
-                            src={media.url || "/placeholder.svg?height=400&width=600"}
+                            src={
+                              media.url ||
+                              "/placeholder.svg?height=400&width=600"
+                            }
                             alt={media.title}
                             fill
                             className="object-cover group-hover:scale-105 transition-transform"
@@ -374,7 +437,9 @@ export default function PortfolioPage({ params }: { params: { username: string }
                         </div>
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors rounded-lg" />
                         <div className="absolute bottom-4 left-4 right-4">
-                          <p className="text-white font-medium text-sm bg-black/50 px-3 py-1 rounded">{media.title}</p>
+                          <p className="text-white font-medium text-sm bg-black/50 px-3 py-1 rounded">
+                            {media.title}
+                          </p>
                         </div>
                       </div>
                     ) : (
@@ -383,7 +448,9 @@ export default function PortfolioPage({ params }: { params: { username: string }
                           <Download className="h-8 w-8 text-blue-600" />
                         </div>
                         <h3 className="font-semibold mb-2">{media.title}</h3>
-                        <p className="text-sm text-gray-600 mb-4">{media.description}</p>
+                        <p className="text-sm text-gray-600 mb-4">
+                          {media.description}
+                        </p>
                         <Button size="sm" variant="outline">
                           <Download className="h-3 w-3 mr-2" />
                           Download
@@ -411,8 +478,12 @@ export default function PortfolioPage({ params }: { params: { username: string }
                           <Award className="h-6 w-6 text-yellow-600" />
                         </div>
                         <div className="flex-1">
-                          <h3 className="font-semibold mb-2">{achievement.title}</h3>
-                          <p className="text-gray-600 mb-2">{achievement.description}</p>
+                          <h3 className="font-semibold mb-2">
+                            {achievement.title}
+                          </h3>
+                          <p className="text-gray-600 mb-2">
+                            {achievement.description}
+                          </p>
                           <div className="flex justify-between items-center text-sm text-gray-500">
                             <span>{achievement.organization}</span>
                             <span>{achievement.year}</span>
@@ -439,7 +510,10 @@ export default function PortfolioPage({ params }: { params: { username: string }
                       <div className="flex items-center mb-4">
                         <div className="relative w-12 h-12 mr-4">
                           <Image
-                            src={testimonial.avatar || "/placeholder.svg?height=150&width=150"}
+                            src={
+                              testimonial.avatar ||
+                              "/placeholder.svg?height=150&width=150"
+                            }
                             alt={testimonial.name}
                             fill
                             className="rounded-full object-cover"
@@ -447,21 +521,29 @@ export default function PortfolioPage({ params }: { params: { username: string }
                         </div>
                         <div>
                           <h4 className="font-semibold">{testimonial.name}</h4>
-                          <p className="text-sm text-gray-600">{testimonial.role}</p>
+                          <p className="text-sm text-gray-600">
+                            {testimonial.role}
+                          </p>
                         </div>
                         <div className="ml-auto flex">
                           {[...Array(5)].map((_, i) => (
                             <Star
                               key={i}
                               className={`h-4 w-4 ${
-                                i < testimonial.rating ? "text-yellow-400 fill-current" : "text-gray-300"
+                                i < testimonial.rating
+                                  ? "text-yellow-400 fill-current"
+                                  : "text-gray-300"
                               }`}
                             />
                           ))}
                         </div>
                       </div>
-                      <p className="text-gray-700 italic">"{testimonial.content}"</p>
-                      <p className="text-sm text-gray-500 mt-2">{testimonial.date}</p>
+                      <p className="text-gray-700 italic">
+                        "{testimonial.content}"
+                      </p>
+                      <p className="text-sm text-gray-500 mt-2">
+                        {testimonial.date}
+                      </p>
                     </Card>
                   </motion.div>
                 ))}
@@ -477,22 +559,31 @@ export default function PortfolioPage({ params }: { params: { username: string }
                     <div className="prose max-w-none">
                       <p className="text-gray-700 mb-4">{portfolio.bio}</p>
                       <p className="text-gray-700 mb-4">
-                        Dengan pengalaman yang luas dalam bidang {portfolio.title.toLowerCase()}, saya berkomitmen untuk
-                        terus berinovasi dan memberikan kontribusi positif bagi masyarakat. Setiap proyek yang saya
-                        kerjakan selalu mengutamakan kualitas, dampak sosial, dan keberlanjutan.
+                        Dengan pengalaman yang luas dalam bidang{" "}
+                        {portfolio.title.toLowerCase()}, saya berkomitmen untuk
+                        terus berinovasi dan memberikan kontribusi positif bagi
+                        masyarakat. Setiap proyek yang saya kerjakan selalu
+                        mengutamakan kualitas, dampak sosial, dan keberlanjutan.
                       </p>
                       <p className="text-gray-700">
-                        Saya percaya bahwa kolaborasi dan pembelajaran berkelanjutan adalah kunci untuk menciptakan
-                        solusi yang meaningful dan sustainable. Mari berkolaborasi untuk menciptakan perubahan positif!
+                        Saya percaya bahwa kolaborasi dan pembelajaran
+                        berkelanjutan adalah kunci untuk menciptakan solusi yang
+                        meaningful dan sustainable. Mari berkolaborasi untuk
+                        menciptakan perubahan positif!
                       </p>
                     </div>
                   </Card>
 
                   <Card className="p-6">
-                    <h3 className="text-xl font-semibold mb-4">Keahlian & Teknologi</h3>
+                    <h3 className="text-xl font-semibold mb-4">
+                      Keahlian & Teknologi
+                    </h3>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                       {portfolio.skills.map((skill, index) => (
-                        <div key={index} className="bg-gray-50 px-3 py-2 rounded-lg text-center">
+                        <div
+                          key={index}
+                          className="bg-gray-50 px-3 py-2 rounded-lg text-center"
+                        >
                           <span className="text-sm font-medium">{skill}</span>
                         </div>
                       ))}
@@ -503,11 +594,16 @@ export default function PortfolioPage({ params }: { params: { username: string }
                     <h3 className="text-xl font-semibold mb-4">Pengalaman</h3>
                     <div className="space-y-4">
                       {portfolio.experience.map((exp, index) => (
-                        <div key={index} className="border-l-2 border-blue-200 pl-4">
+                        <div
+                          key={index}
+                          className="border-l-2 border-blue-200 pl-4"
+                        >
                           <h4 className="font-semibold">{exp.position}</h4>
                           <p className="text-blue-600">{exp.company}</p>
                           <p className="text-sm text-gray-500">{exp.period}</p>
-                          <p className="text-gray-700 mt-2">{exp.description}</p>
+                          <p className="text-gray-700 mt-2">
+                            {exp.description}
+                          </p>
                         </div>
                       ))}
                     </div>
@@ -516,7 +612,9 @@ export default function PortfolioPage({ params }: { params: { username: string }
 
                 <div className="space-y-6">
                   <Card className="p-6">
-                    <h3 className="text-xl font-semibold mb-4">Informasi Kontak</h3>
+                    <h3 className="text-xl font-semibold mb-4">
+                      Informasi Kontak
+                    </h3>
                     <div className="space-y-3">
                       <div className="flex items-center">
                         <MapPin className="h-4 w-4 mr-3 text-gray-500" />
@@ -625,7 +723,11 @@ export default function PortfolioPage({ params }: { params: { username: string }
                           <h4 className="font-semibold">{edu.degree}</h4>
                           <p className="text-blue-600">{edu.institution}</p>
                           <p className="text-sm text-gray-500">{edu.year}</p>
-                          {edu.gpa && <p className="text-sm text-gray-600">GPA: {edu.gpa}</p>}
+                          {edu.gpa && (
+                            <p className="text-sm text-gray-600">
+                              GPA: {edu.gpa}
+                            </p>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -648,14 +750,22 @@ export default function PortfolioPage({ params }: { params: { username: string }
         >
           <h2 className="text-3xl font-bold mb-4">Tertarik Berkolaborasi?</h2>
           <p className="text-xl mb-8 max-w-2xl mx-auto">
-            Mari diskusikan bagaimana kita bisa bekerja sama untuk menciptakan solusi inovatif
+            Mari diskusikan bagaimana kita bisa bekerja sama untuk menciptakan
+            solusi inovatif
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <MotionButton size="lg" className="bg-white text-blue-700 hover:bg-gray-100">
+            <MotionButton
+              size="lg"
+              className="bg-white text-blue-700 hover:bg-gray-100"
+            >
               <Mail className="h-4 w-4 mr-2" />
               Hubungi Saya
             </MotionButton>
-            <MotionButton size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
+            <MotionButton
+              size="lg"
+              variant="outline"
+              className="border-white text-white bg-white/10"
+            >
               <Share2 className="h-4 w-4 mr-2" />
               Bagikan Portfolio
             </MotionButton>
@@ -663,5 +773,5 @@ export default function PortfolioPage({ params }: { params: { username: string }
         </motion.div>
       </section>
     </PageTransition>
-  )
+  );
 }
