@@ -56,5 +56,7 @@ jobs:
 
           echo "🔥 Menjalankan semua proses PM2..."
           pm2 start all || { echo "❌ Gagal menjalankan PM2"; exit 1; }
+          pm2 startup || { echo "❌ Gagal mengatur PM2 startup"; exit 1; }
+          pm2 save || { echo "❌ Gagal menyimpan konfigurasi PM2"; exit 1; }
 
           echo "✅ Build selesai!"
