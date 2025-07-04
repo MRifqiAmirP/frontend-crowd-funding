@@ -1,3 +1,5 @@
+import { AuthResponse } from "@/types/auth"
+
 export interface User {
   id: string
   email: string
@@ -12,6 +14,7 @@ export interface User {
     bio?: string
     verified?: boolean
   }
+  idToken?: string;
 }
 
 export const mockUsers: Record<string, { password: string; user: User }> = {
@@ -65,14 +68,33 @@ export const mockUsers: Record<string, { password: string; user: User }> = {
   },
 }
 
-export const authenticateUser = async (email: string, password: string): Promise<User | null> => {
-  // Simulate API call delay
-  await new Promise((resolve) => setTimeout(resolve, 1000))
+export const authenticateUser = async (email: string, password: string): Promise<AuthResponse | null> => {
+  const normalizedEmail = email.trim().toLowerCase();
 
-  const userRecord = mockUsers[email]
-  if (userRecord && userRecord.password === password) {
-    return userRecord.user
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email: normalizedEmail, password }),
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      // Tangani error jika respons tidak OK (misal: status 401 Unauthorized)
+      const errorData = await response.json();
+      console.error('Login failed:', errorData.message);
+      return null;
+    }
+
+    const data: AuthResponse = await response.json();
+
+    console.log({ data });
+
+    return data;
+  } catch (error) {
+    console.error('An error occurred during authentication:', error);
+    return null;
   }
-
-  return null
-}
+};
