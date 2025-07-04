@@ -24,7 +24,7 @@ jobs:
           [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 
           echo "📁 Masuk ke direktori frontend..."
-          cd /home/proyeksiswa/crowd-funding/frontend-crowd-funding-nextjs
+          cd /home/proyeksiswa/crowd-funding/frontend-crowd-funding
 
           echo "📥 Menarik perubahan dari Git..."
           git pull origin main
