@@ -1,0 +1,60 @@
+name: Automation Deploy Frontend to VPS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy-frontend:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Kode
+      uses: actions/checkout@v3
+
+    - name: SSH dan Deploy ke VPS (Frontend)
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        username: ${{ secrets.VPS_USER }}
+        key: ${{ secrets.VPS_SSH_KEY }}
+        script: |
+          export NVM_DIR="$HOME/.nvm"
+          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
+          echo "📁 Masuk ke direktori frontend..."
+          cd /home/proyeksiswa/crowd-funding/frontend-crowd-funding-nextjs
+
+          echo "📥 Menarik perubahan dari Git..."
+          git pull origin main
+
+          echo "🔍 Mengecek perubahan dependencies..."
+          if git diff --name-only HEAD@{1} HEAD | grep -E 'package\.json|yarn\.lock'; then
+            echo "🔄 package.json atau yarn.lock berubah, menjalankan yarn install..."
+            yarn install
+          else
+            echo "✅ Tidak ada perubahan dependencies, melewati yarn install."
+          fi
+          
+          echo "🚦 Memulai proses build Next.js..."
+
+          echo "📦 Mematikan semua proses PM2..."
+          pm2 stop all || { echo "❌ Gagal mematikan PM2"; exit 1; }
+
+          echo "🛑 Menghentikan layanan MySQL..."
+          sudo /bin/systemctl stop mysql || { echo "❌ Gagal mematikan MySQL"; exit 1; }
+
+          echo "🏗️ Membuild project Next.js..."
+          yarn build || { echo "❌ Gagal saat proses build"; exit 1; }
+
+          echo "🚀 Menyalakan kembali layanan MySQL..."
+          sudo /bin/systemctl start mysql || { echo "❌ Gagal menyalakan MySQL"; exit 1; }
+
+          echo "🔄 Mengaktifkan MySQL agar otomatis saat boot..."
+          sudo /bin/systemctl enable mysql || { echo "❌ Gagal enable MySQL"; exit 1; }
+
+          echo "🔥 Menjalankan semua proses PM2..."
+          pm2 start all || { echo "❌ Gagal menjalankan PM2"; exit 1; }
+
+          echo "✅ Build selesai!"
