@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Link from "next/link"
-import Image from "next/image"
+import { useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
 import {
   ArrowLeft,
   Calendar,
@@ -19,51 +19,55 @@ import {
   AlertCircle,
   Download,
   ExternalLink,
-} from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Separator } from "@/components/ui/separator"
-import { getResearchById } from "@/lib/research-data"
-import { notFound } from "next/navigation"
+} from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Separator } from "@/components/ui/separator";
+import { getResearchById } from "@/lib/research-data";
+import { notFound } from "next/navigation";
 
-export default function ResearchDetailPage({ params }: { params: { id: string } }) {
-  const [isBookmarked, setIsBookmarked] = useState(false)
+export default function ResearchDetailPage({
+  params,
+}: {
+  params: { id: string };
+}) {
+  const [isBookmarked, setIsBookmarked] = useState(false);
 
-  const research = getResearchById(params.id)
+  const research = getResearchById(params.id);
 
   if (!research) {
-    notFound()
+    notFound();
   }
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case "completed":
-        return "bg-green-100 text-green-800"
+        return "bg-green-100 text-green-800";
       case "active":
-        return "bg-blue-100 text-blue-800"
+        return "bg-blue-100 text-blue-800";
       case "pending":
-        return "bg-gray-100 text-gray-800"
+        return "bg-gray-100 text-gray-800";
       default:
-        return "bg-gray-100 text-gray-800"
+        return "bg-gray-100 text-gray-800";
     }
-  }
+  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "completed":
-        return <CheckCircle className="h-4 w-4" />
+        return <CheckCircle className="h-4 w-4" />;
       case "active":
-        return <Clock className="h-4 w-4" />
+        return <Clock className="h-4 w-4" />;
       case "pending":
-        return <AlertCircle className="h-4 w-4" />
+        return <AlertCircle className="h-4 w-4" />;
       default:
-        return <AlertCircle className="h-4 w-4" />
+        return <AlertCircle className="h-4 w-4" />;
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -78,21 +82,33 @@ export default function ResearchDetailPage({ params }: { params: { id: string } 
               </Link>
             </Button>
             <div className="flex-1">
-              <h1 className="text-2xl font-bold text-gray-900">{research.title}</h1>
+              <h1 className="text-2xl font-bold text-gray-900">
+                {research.title}
+              </h1>
               <div className="flex items-center gap-2 mt-1">
                 <Badge>{research.category}</Badge>
-                <Badge className={getStatusColor(research.stage)}>{research.stage}</Badge>
+                <Badge className={getStatusColor(research.stage)}>
+                  {research.stage}
+                </Badge>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={() => setIsBookmarked(!isBookmarked)}>
-                <Bookmark className={`h-4 w-4 ${isBookmarked ? "fill-current" : ""}`} />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsBookmarked(!isBookmarked)}
+              >
+                <Bookmark
+                  className={`h-4 w-4 ${isBookmarked ? "fill-current" : ""}`}
+                />
               </Button>
               <Button variant="outline" size="sm">
                 <Share2 className="h-4 w-4" />
               </Button>
               <Button size="sm" asChild>
-                <Link href={`/incubator/research/${research.id}/fund`}>Danai Riset</Link>
+                <Link href={`/incubator/research/${research.id}/fund`}>
+                  Danai Riset
+                </Link>
               </Button>
             </div>
           </div>
@@ -149,11 +165,17 @@ export default function ResearchDetailPage({ params }: { params: { id: string } 
                     <CardTitle>Deskripsi Riset</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-gray-700 mb-6 leading-relaxed">{research.description}</p>
+                    <p className="text-gray-700 mb-6 leading-relaxed">
+                      {research.description}
+                    </p>
 
                     <div className="prose max-w-none">
-                      <h3 className="text-lg font-semibold mb-3">Detail Lengkap</h3>
-                      <div className="whitespace-pre-line text-gray-700">{research.fullDescription}</div>
+                      <h3 className="text-lg font-semibold mb-3">
+                        Detail Lengkap
+                      </h3>
+                      <div className="whitespace-pre-line text-gray-700">
+                        {research.fullDescription}
+                      </div>
                     </div>
 
                     <div className="mt-6">
@@ -171,7 +193,10 @@ export default function ResearchDetailPage({ params }: { params: { id: string } 
                       <h3 className="text-lg font-semibold mb-3">Dokumen</h3>
                       <div className="space-y-3">
                         {research.documents.map((doc, index) => (
-                          <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                          <div
+                            key={index}
+                            className="flex items-center justify-between p-3 border rounded-lg"
+                          >
                             <div className="flex items-center gap-3">
                               <FileText className="h-5 w-5 text-gray-500" />
                               <div>
@@ -208,20 +233,30 @@ export default function ResearchDetailPage({ params }: { params: { id: string } 
                                 milestone.status === "completed"
                                   ? "bg-green-100"
                                   : milestone.status === "active"
-                                    ? "bg-blue-100"
-                                    : "bg-gray-100"
+                                  ? "bg-blue-100"
+                                  : "bg-gray-100"
                               }`}
                             >
                               {getStatusIcon(milestone.status)}
                             </div>
-                            {index < research.milestones.length - 1 && <div className="w-px h-12 bg-gray-200 mt-2" />}
+                            {index < research.milestones.length - 1 && (
+                              <div className="w-px h-12 bg-gray-200 mt-2" />
+                            )}
                           </div>
                           <div className="flex-1 pb-8">
                             <div className="flex items-center gap-2 mb-2">
-                              <h3 className="font-semibold">{milestone.title}</h3>
-                              <Badge className={getStatusColor(milestone.status)}>{milestone.status}</Badge>
+                              <h3 className="font-semibold">
+                                {milestone.title}
+                              </h3>
+                              <Badge
+                                className={getStatusColor(milestone.status)}
+                              >
+                                {milestone.status}
+                              </Badge>
                             </div>
-                            <p className="text-gray-600 mb-2">{milestone.description}</p>
+                            <p className="text-gray-600 mb-2">
+                              {milestone.description}
+                            </p>
                             <div className="flex items-center gap-2 text-sm text-gray-500">
                               <Calendar className="h-4 w-4" />
                               <span>Target: {milestone.date}</span>
@@ -242,14 +277,23 @@ export default function ResearchDetailPage({ params }: { params: { id: string } 
                   <CardContent>
                     <div className="space-y-6">
                       {research.team.map((member, index) => (
-                        <div key={index} className="flex items-center gap-4 p-4 border rounded-lg">
+                        <div
+                          key={index}
+                          className="flex items-center gap-4 p-4 border rounded-lg"
+                        >
                           <Avatar className="h-16 w-16">
-                            <AvatarImage src={member.avatar || "/placeholder.svg"} />
+                            <AvatarImage
+                              src={member.avatar || "/placeholder.svg"}
+                            />
                             <AvatarFallback>{member.name[0]}</AvatarFallback>
                           </Avatar>
                           <div className="flex-1">
-                            <h3 className="font-semibold text-lg">{member.name}</h3>
-                            <p className="text-purple-600 font-medium">{member.role}</p>
+                            <h3 className="font-semibold text-lg">
+                              {member.name}
+                            </h3>
+                            <p className="text-purple-600 font-medium">
+                              {member.role}
+                            </p>
                             <p className="text-gray-600">{member.expertise}</p>
                           </div>
                           <Button variant="outline" size="sm">
@@ -270,15 +314,23 @@ export default function ResearchDetailPage({ params }: { params: { id: string } 
                       <CardContent className="p-6">
                         <div className="flex items-start gap-4">
                           <Avatar className="h-10 w-10">
-                            <AvatarImage src={research.researcher.avatar || "/placeholder.svg"} />
+                            <AvatarImage
+                              src={
+                                research.researcher.avatar || "/placeholder.svg"
+                              }
+                            />
                             <AvatarFallback>{update.author[0]}</AvatarFallback>
                           </Avatar>
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
                               <h3 className="font-semibold">{update.title}</h3>
-                              <span className="text-sm text-gray-500">• {update.date}</span>
+                              <span className="text-sm text-gray-500">
+                                • {update.date}
+                              </span>
                             </div>
-                            <p className="text-gray-700 mb-4">{update.content}</p>
+                            <p className="text-gray-700 mb-4">
+                              {update.content}
+                            </p>
                             {update.images.length > 0 && (
                               <div className="grid grid-cols-2 gap-4">
                                 {update.images.map((image, index) => (
@@ -305,6 +357,49 @@ export default function ResearchDetailPage({ params }: { params: { id: string } 
 
           {/* Sidebar */}
           <div className="space-y-6">
+            {/* Quick Actions */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Aksi Cepat</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-start"
+                  >
+                    <MessageSquare className="h-4 w-4 mr-2" />
+                    Diskusi
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-start"
+                  >
+                    <Users className="h-4 w-4 mr-2" />
+                    Kolaborasi
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-start"
+                  >
+                    <FileText className="h-4 w-4 mr-2" />
+                    Laporan
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-start"
+                  >
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    Website
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Funding Progress */}
             <Card>
               <CardHeader>
@@ -319,16 +414,24 @@ export default function ResearchDetailPage({ params }: { params: { id: string } 
                     <div className="flex justify-between text-sm mb-2">
                       <span>Terkumpul</span>
                       <span className="font-medium">
-                        {Math.round((research.funding / research.targetFunding) * 100)}%
+                        {Math.round(
+                          (research.funding / research.targetFunding) * 100
+                        )}
+                        %
                       </span>
                     </div>
-                    <Progress value={(research.funding / research.targetFunding) * 100} className="h-3" />
+                    <Progress
+                      value={(research.funding / research.targetFunding) * 100}
+                      className="h-3"
+                    />
                   </div>
                   <div className="flex justify-between">
                     <span className="text-2xl font-bold text-purple-600">
                       Rp {(research.funding / 1000000).toFixed(1)}M
                     </span>
-                    <span className="text-gray-600">dari Rp {(research.targetFunding / 1000000).toFixed(1)}M</span>
+                    <span className="text-gray-600">
+                      dari Rp {(research.targetFunding / 1000000).toFixed(1)}M
+                    </span>
                   </div>
                   <div className="flex items-center justify-between text-sm text-gray-600">
                     <div className="flex items-center gap-1">
@@ -341,7 +444,9 @@ export default function ResearchDetailPage({ params }: { params: { id: string } 
                     </div>
                   </div>
                   <Button className="w-full" size="lg" asChild>
-                    <Link href={`/incubator/research/${research.id}/fund`}>Danai Sekarang</Link>
+                    <Link href={`/incubator/research/${research.id}/fund`}>
+                      Danai Sekarang
+                    </Link>
                   </Button>
                 </div>
               </CardContent>
@@ -355,27 +460,43 @@ export default function ResearchDetailPage({ params }: { params: { id: string } 
               <CardContent>
                 <div className="flex items-center gap-4 mb-4">
                   <Avatar className="h-16 w-16">
-                    <AvatarImage src={research.researcher.avatar || "/placeholder.svg"} />
-                    <AvatarFallback>{research.researcher.name[0]}</AvatarFallback>
+                    <AvatarImage
+                      src={research.researcher.avatar || "/placeholder.svg"}
+                    />
+                    <AvatarFallback>
+                      {research.researcher.name[0]}
+                    </AvatarFallback>
                   </Avatar>
                   <div>
-                    <h3 className="font-semibold text-lg">{research.researcher.name}</h3>
-                    <p className="text-purple-600">{research.researcher.role}</p>
-                    <p className="text-sm text-gray-600">{research.researcher.institution}</p>
+                    <h3 className="font-semibold text-lg">
+                      {research.researcher.name}
+                    </h3>
+                    <p className="text-purple-600">
+                      {research.researcher.role}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      {research.researcher.institution}
+                    </p>
                   </div>
                 </div>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span>Reputasi</span>
-                    <span className="font-medium">{research.researcher.reputation}</span>
+                    <span className="font-medium">
+                      {research.researcher.reputation}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Publikasi</span>
-                    <span className="font-medium">{research.researcher.publications}</span>
+                    <span className="font-medium">
+                      {research.researcher.publications}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Pengalaman</span>
-                    <span className="font-medium">{research.researcher.experience}</span>
+                    <span className="font-medium">
+                      {research.researcher.experience}
+                    </span>
                   </div>
                 </div>
                 <Separator className="my-4" />
@@ -409,37 +530,12 @@ export default function ResearchDetailPage({ params }: { params: { id: string } 
                         <p className="text-xs text-gray-600">{funder.type}</p>
                       </div>
                       <div className="text-right">
-                        <p className="font-medium text-sm">Rp {(funder.amount / 1000000).toFixed(1)}M</p>
+                        <p className="font-medium text-sm">
+                          Rp {(funder.amount / 1000000).toFixed(1)}M
+                        </p>
                       </div>
                     </div>
                   ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Quick Actions */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Aksi Cepat</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <Button variant="outline" size="sm" className="w-full justify-start">
-                    <MessageSquare className="h-4 w-4 mr-2" />
-                    Diskusi
-                  </Button>
-                  <Button variant="outline" size="sm" className="w-full justify-start">
-                    <Users className="h-4 w-4 mr-2" />
-                    Kolaborasi
-                  </Button>
-                  <Button variant="outline" size="sm" className="w-full justify-start">
-                    <FileText className="h-4 w-4 mr-2" />
-                    Laporan
-                  </Button>
-                  <Button variant="outline" size="sm" className="w-full justify-start">
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    Website
-                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -447,5 +543,5 @@ export default function ResearchDetailPage({ params }: { params: { id: string } 
         </div>
       </div>
     </div>
-  )
+  );
 }
