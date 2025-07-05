@@ -103,3 +103,16 @@ export const forgotPassword = async (email: string): Promise<{ success: boolean;
     return { success: false, message: error.response?.data?.message || "Terjadi kesalahan jaringan atau server. Silakan coba lagi nanti." };
   }
 };
+
+export const resetPassword = async (token: string, newPassword: string): Promise<{ success: boolean; message: string }> => {
+  try {
+    const response = await apiClient.post<{ success: boolean; message: string }>('/api/auth/reset-password', {
+      token,
+      newPassword,
+    });
+    return { success: response.data.success, message: response.data.message || "Password berhasil direset." };
+  } catch (error: any) {
+    console.error('An error occurred during password reset:', error.response?.data?.message || error.message, error.response?.data);
+    return { success: false, message: error.response?.data?.message || "Gagal mereset password. Silakan coba lagi." };
+  }
+};
