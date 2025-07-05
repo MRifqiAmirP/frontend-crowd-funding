@@ -229,7 +229,7 @@ export default function PortfolioPage() {
               </Select>
 
               {/* View Mode Toggle */}
-              <div className="flex border rounded-lg">
+              {/* <div className="flex border rounded-lg">
                 <Button
                   variant={viewMode === "grid" ? "default" : "ghost"}
                   size="sm"
@@ -246,7 +246,7 @@ export default function PortfolioPage() {
                 >
                   <List className="h-4 w-4" />
                 </Button>
-              </div>
+              </div> */}
             </div>
           </div>
 
