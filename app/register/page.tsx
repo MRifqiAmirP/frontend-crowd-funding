@@ -1,55 +1,176 @@
-"use client"
+"use client";
 
-import type React from "react"
-
-import { useState } from "react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { toast } from "@/components/ui/use-toast"
+import type React from "react";
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { toast } from "@/components/ui/use-toast";
+import { registerUser } from "@/lib/auth"; // Import fungsi registerUser
+import { RegisterResponse, ErrorResponse } from "@/types/auth"; // Import tipe respons
 
 export default function RegisterPage() {
-  const router = useRouter()
-  const [isLoading, setIsLoading] = useState(false)
-  const [accountType, setAccountType] = useState("student")
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  const [accountType, setAccountType] = useState<
+    "student" | "mentor" | "donor"
+  >("student");
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    school: "", // For student
+    educationLevel: "", // For student
+    expertise: "", // For mentor
+    password: "",
+    confirmPassword: "",
+    termsAccepted: false,
+  });
+  const [error, setError] = useState<string | null>(null);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [id]: type === "checkbox" ? checked : value,
+    }));
+    setError(null); // Clear error when input changes
+  };
+
+  const handleSelectChange = (id: string, value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      [id]: value,
+    }));
+    setError(null);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
+    e.preventDefault();
+    setIsLoading(true);
+    setError(null);
 
-    // Simulate API call
-    setTimeout(() => {
-      toast({
-        title: "Pendaftaran berhasil!",
-        description: "Silakan cek email Anda untuk verifikasi akun.",
-      })
-      setIsLoading(false)
-      router.push("/login")
-    }, 1000)
-  }
+    if (formData.password !== formData.confirmPassword) {
+      setError("Password dan konfirmasi password tidak cocok.");
+      setIsLoading(false);
+      return;
+    }
+
+    if (!formData.termsAccepted) {
+      setError(
+        "Anda harus menyetujui Syarat dan Ketentuan serta Kebijakan Privasi."
+      );
+      setIsLoading(false);
+      return;
+    }
+
+    // Prepare data based on account type
+    const payload: any = {
+      email: formData.email,
+      first_name: formData.firstName,
+      last_name: formData.lastName,
+      password: formData.password,
+      role: accountType, // Role diambil dari accountType
+    };
+
+    if (accountType === "student") {
+      payload.instance = formData.school; // Menggunakan 'instance' untuk sekolah/kampus
+      payload.education_level = formData.educationLevel;
+    } else if (accountType === "mentor") {
+      payload.expertise = formData.expertise;
+    }
+
+    try {
+      const response = await registerUser(payload);
+
+      if (response.success) {
+        // Pendaftaran berhasil
+        toast({
+          title: "Pendaftaran berhasil!",
+          description: "Silakan cek email Anda untuk verifikasi akun.",
+        });
+        router.push("/login");
+      } else {
+        // Pendaftaran gagal, tampilkan pesan error dari backend
+        const errorResponse = response as ErrorResponse;
+        setError(
+          errorResponse.message || "Pendaftaran gagal. Silakan coba lagi."
+        );
+        if (errorResponse.errors && errorResponse.errors.length > 0) {
+          errorResponse.errors.forEach((err) =>
+            toast({
+              title: "Validasi Gagal",
+              description: err,
+              variant: "destructive",
+            })
+          );
+        }
+      }
+    } catch (err) {
+      console.error("Terjadi kesalahan saat mendaftar:", err);
+      setError(
+        "Terjadi kesalahan jaringan atau server. Silakan coba lagi nanti."
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="container mx-auto px-4 md:px-6 py-16">
       <div className="flex justify-center">
         <Card className="w-full max-w-lg">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold text-center">Daftar Akun</CardTitle>
-            <CardDescription className="text-center">Buat akun untuk mulai menggunakan ProyekSiswa.id</CardDescription>
+            <CardTitle className="text-2xl font-bold text-center">
+              Daftar Akun
+            </CardTitle>
+            <CardDescription className="text-center">
+              Buat akun untuk mulai menggunakan ProyekSiswa.id
+            </CardDescription>
           </CardHeader>
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4">
+              {error && (
+                <div className="p-3 text-sm text-red-700 bg-red-100 border border-red-200 rounded-md">
+                  {error}
+                </div>
+              )}
+
               <div className="space-y-2">
                 <Label>Jenis Akun</Label>
                 <RadioGroup
                   defaultValue="student"
                   className="flex flex-col space-y-1 sm:flex-row sm:space-y-0 sm:space-x-4"
                   value={accountType}
-                  onValueChange={setAccountType}
+                  onValueChange={(value: "student" | "mentor" | "donor") => {
+                    setAccountType(value);
+                    // Reset fields not relevant to the new account type
+                    setFormData((prev) => ({
+                      ...prev,
+                      school: "",
+                      educationLevel: "",
+                      expertise: "",
+                    }));
+                    setError(null);
+                  }}
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="student" id="student" />
@@ -68,42 +189,70 @@ export default function RegisterPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="first-name">Nama Depan</Label>
-                  <Input id="first-name" required />
+                  <Label htmlFor="firstName">Nama Depan</Label>
+                  <Input
+                    id="firstName"
+                    value={formData.firstName}
+                    onChange={handleInputChange}
+                    required
+                  />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="last-name">Nama Belakang</Label>
-                  <Input id="last-name" required />
+                  <Label htmlFor="lastName">Nama Belakang</Label>
+                  <Input
+                    id="lastName"
+                    value={formData.lastName}
+                    onChange={handleInputChange}
+                    required
+                  />
                 </div>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="nama@email.com" required />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="nama@email.com"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  required
+                />
               </div>
 
               {accountType === "student" && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="school">Sekolah/Kampus</Label>
-                    <Input id="school" required />
+                    <Input
+                      id="school"
+                      value={formData.school}
+                      onChange={handleInputChange}
+                      required={accountType === "student"}
+                    />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="education-level">Jenjang Pendidikan</Label>
-                    <Select required>
-                      <SelectTrigger id="education-level">
+                    <Label htmlFor="educationLevel">Jenjang Pendidikan</Label>
+                    <Select
+                      value={formData.educationLevel}
+                      onValueChange={(val) =>
+                        handleSelectChange("educationLevel", val)
+                      }
+                      required={accountType === "student"}
+                    >
+                      <SelectTrigger id="educationLevel">
                         <SelectValue placeholder="Pilih jenjang" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="smp">SMP</SelectItem>
-                        <SelectItem value="sma">SMA</SelectItem>
-                        <SelectItem value="smk">SMK</SelectItem>
-                        <SelectItem value="d3">D1</SelectItem>
-                        <SelectItem value="d3">D2</SelectItem>
-                        <SelectItem value="d3">D3</SelectItem>
-                        <SelectItem value="s1">S1</SelectItem>
-                        <SelectItem value="s2">S2</SelectItem>
-                        <SelectItem value="s2">S3</SelectItem>
+                        <SelectItem value="SMP">SMP</SelectItem>
+                        <SelectItem value="SMA">SMA</SelectItem>
+                        <SelectItem value="SMK">SMK</SelectItem>
+                        <SelectItem value="D1">D1</SelectItem>
+                        <SelectItem value="D2">D2</SelectItem>
+                        <SelectItem value="D3">D3</SelectItem>
+                        <SelectItem value="S1">S1</SelectItem>
+                        <SelectItem value="S2">S2</SelectItem>
+                        <SelectItem value="S3">S3</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -113,13 +262,21 @@ export default function RegisterPage() {
               {accountType === "mentor" && (
                 <div className="space-y-2">
                   <Label htmlFor="expertise">Bidang Keahlian</Label>
-                  <Select required>
+                  <Select
+                    value={formData.expertise}
+                    onValueChange={(val) =>
+                      handleSelectChange("expertise", val)
+                    }
+                    required={accountType === "mentor"}
+                  >
                     <SelectTrigger id="expertise">
                       <SelectValue placeholder="Pilih bidang keahlian" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="teknologi">Teknologi</SelectItem>
-                      <SelectItem value="bisnis">Bisnis & Kewirausahaan</SelectItem>
+                      <SelectItem value="bisnis">
+                        Bisnis & Kewirausahaan
+                      </SelectItem>
                       <SelectItem value="marketing">Marketing</SelectItem>
                       <SelectItem value="desain">Desain & Kreatif</SelectItem>
                       <SelectItem value="pendidikan">Pendidikan</SelectItem>
@@ -133,23 +290,45 @@ export default function RegisterPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="password">Password</Label>
-                  <Input id="password" type="password" required />
+                  <Input
+                    id="password"
+                    type="password"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    required
+                  />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="confirm-password">Konfirmasi Password</Label>
-                  <Input id="confirm-password" type="password" required />
+                  <Label htmlFor="confirmPassword">Konfirmasi Password</Label>
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    value={formData.confirmPassword}
+                    onChange={handleInputChange}
+                    required
+                  />
                 </div>
               </div>
 
               <div className="flex items-center space-x-2">
-                <input type="checkbox" id="terms" className="rounded border-gray-300" required />
-                <Label htmlFor="terms" className="text-sm font-normal">
+                <input
+                  type="checkbox"
+                  id="termsAccepted"
+                  className="rounded border-gray-300"
+                  checked={formData.termsAccepted}
+                  onChange={handleInputChange}
+                  required
+                />
+                <Label htmlFor="termsAccepted" className="text-sm font-normal">
                   Saya menyetujui{" "}
                   <Link href="/terms" className="text-blue-600 hover:underline">
                     Syarat dan Ketentuan
                   </Link>{" "}
                   serta{" "}
-                  <Link href="/privacy" className="text-blue-600 hover:underline">
+                  <Link
+                    href="/privacy"
+                    className="text-blue-600 hover:underline"
+                  >
                     Kebijakan Privasi
                   </Link>
                 </Label>
@@ -170,5 +349,5 @@ export default function RegisterPage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }

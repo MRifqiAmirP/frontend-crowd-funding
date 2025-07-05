@@ -1,4 +1,4 @@
-import { AuthResponse } from "@/types/auth"
+import { AuthResponse, ErrorResponse, RegisterResponse } from "@/types/auth"
 
 export interface User {
   id: string
@@ -98,3 +98,26 @@ export const authenticateUser = async (email: string, password: string): Promise
     return null;
   }
 };
+
+export const registerUser = async (formData: any): Promise<RegisterResponse | ErrorResponse> => {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/register`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(formData),
+    credentials: 'include', // Penting agar cookies (refresh_token) diterima browser
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    // Backend mengembalikan status error (misal 400, 409)
+    // dan body respons adalah ErrorResponse
+    return data as ErrorResponse;
+  }
+
+  // Backend mengembalikan status sukses (misal 200, 201)
+  return data as RegisterResponse;
+};
+
