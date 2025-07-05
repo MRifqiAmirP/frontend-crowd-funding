@@ -239,7 +239,7 @@ export default function LoginPage() {
           </Card>
 
           {/* Demo Accounts */}
-          <Card>
+          {/* <Card>
             <CardHeader>
               <CardTitle className="text-lg">Akun Demo</CardTitle>
               <CardDescription>
@@ -269,7 +269,7 @@ export default function LoginPage() {
                 </div>
               ))}
             </CardContent>
-          </Card>
+          </Card> */}
         </div>
       </div>
     </div>

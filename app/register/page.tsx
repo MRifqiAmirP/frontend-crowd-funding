@@ -1,7 +1,8 @@
+// app/register/page.tsx
 "use client";
 
 import type React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react"; // Import useEffect
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -37,7 +38,7 @@ export default function RegisterPage() {
     firstName: "",
     lastName: "",
     email: "",
-    school: "", // For student
+    school: "", // For student (maps to 'instance' in payload)
     educationLevel: "", // For student
     expertise: "", // For mentor
     password: "",
@@ -45,6 +46,49 @@ export default function RegisterPage() {
     termsAccepted: false,
   });
   const [error, setError] = useState<string | null>(null);
+  const [isButtonDisabled, setIsButtonDisabled] = useState(true); // State baru untuk tombol
+
+  // useEffect untuk memantau perubahan formData dan accountType
+  useEffect(() => {
+    const validateForm = () => {
+      // Validasi field umum
+      if (
+        !formData.firstName ||
+        !formData.lastName ||
+        !formData.email ||
+        !formData.password ||
+        !formData.confirmPassword
+      ) {
+        return false;
+      }
+
+      // Validasi password cocok
+      if (formData.password !== formData.confirmPassword) {
+        return false;
+      }
+
+      // Validasi berdasarkan jenis akun
+      if (accountType === "student") {
+        if (!formData.school || !formData.educationLevel) {
+          return false;
+        }
+      } else if (accountType === "mentor") {
+        if (!formData.expertise) {
+          return false;
+        }
+      }
+      // Untuk "donor", tidak ada field tambahan yang wajib di form ini
+
+      // Validasi Terms & Conditions
+      if (!formData.termsAccepted) {
+        return false;
+      }
+
+      return true;
+    };
+
+    setIsButtonDisabled(!validateForm());
+  }, [formData, accountType]); // Dependensi: setiap kali formData atau accountType berubah
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value, type, checked } = e.target;
@@ -68,6 +112,7 @@ export default function RegisterPage() {
     setIsLoading(true);
     setError(null);
 
+    // Validasi tambahan sebelum kirim (redundant tapi aman)
     if (formData.password !== formData.confirmPassword) {
       setError("Password dan konfirmasi password tidak cocok.");
       setIsLoading(false);
@@ -78,6 +123,18 @@ export default function RegisterPage() {
       setError(
         "Anda harus menyetujui Syarat dan Ketentuan serta Kebijakan Privasi."
       );
+      setIsLoading(false);
+      return;
+    }
+
+    // Pastikan tombol tidak disabled (validasi di useEffect seharusnya sudah cukup)
+    if (isButtonDisabled) {
+      toast({
+        title: "Data Tidak Lengkap",
+        description:
+          "Mohon lengkapi semua bidang wajib dan setujui Syarat & Ketentuan.",
+        variant: "destructive",
+      });
       setIsLoading(false);
       return;
     }
@@ -97,6 +154,7 @@ export default function RegisterPage() {
     } else if (accountType === "mentor") {
       payload.expertise = formData.expertise;
     }
+    // Jika donor, payload sudah cukup (hanya email, nama, password, role)
 
     try {
       const response = await registerUser(payload);
@@ -194,7 +252,7 @@ export default function RegisterPage() {
                     id="firstName"
                     value={formData.firstName}
                     onChange={handleInputChange}
-                    required
+                    required // Ditandai required untuk validasi HTML5
                   />
                 </div>
                 <div className="space-y-2">
@@ -203,7 +261,7 @@ export default function RegisterPage() {
                     id="lastName"
                     value={formData.lastName}
                     onChange={handleInputChange}
-                    required
+                    required // Ditandai required untuk validasi HTML5
                   />
                 </div>
               </div>
@@ -216,7 +274,7 @@ export default function RegisterPage() {
                   placeholder="nama@email.com"
                   value={formData.email}
                   onChange={handleInputChange}
-                  required
+                  required // Ditandai required untuk validasi HTML5
                 />
               </div>
 
@@ -295,7 +353,7 @@ export default function RegisterPage() {
                     type="password"
                     value={formData.password}
                     onChange={handleInputChange}
-                    required
+                    required // Ditandai required untuk validasi HTML5
                   />
                 </div>
                 <div className="space-y-2">
@@ -305,7 +363,7 @@ export default function RegisterPage() {
                     type="password"
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
-                    required
+                    required // Ditandai required untuk validasi HTML5
                   />
                 </div>
               </div>
@@ -317,7 +375,7 @@ export default function RegisterPage() {
                   className="rounded border-gray-300"
                   checked={formData.termsAccepted}
                   onChange={handleInputChange}
-                  required
+                  required // Ditandai required untuk validasi HTML5
                 />
                 <Label htmlFor="termsAccepted" className="text-sm font-normal">
                   Saya menyetujui{" "}
@@ -335,7 +393,11 @@ export default function RegisterPage() {
               </div>
             </CardContent>
             <CardFooter className="flex flex-col">
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isLoading || isButtonDisabled}
+              >
                 {isLoading ? "Memproses..." : "Daftar"}
               </Button>
               <p className="mt-4 text-center text-sm text-gray-600">
