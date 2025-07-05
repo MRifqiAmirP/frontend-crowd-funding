@@ -133,7 +133,7 @@ export default function RegisterPage() {
         title: "Data Tidak Lengkap",
         description:
           "Mohon lengkapi semua bidang wajib dan setujui Syarat & Ketentuan.",
-        variant: "destructive",
+        type: "error",
       });
       setIsLoading(false);
       return;
@@ -177,7 +177,7 @@ export default function RegisterPage() {
             toast({
               title: "Validasi Gagal",
               description: err,
-              variant: "destructive",
+              type: "error",
             })
           );
         }

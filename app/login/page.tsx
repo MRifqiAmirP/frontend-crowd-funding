@@ -16,12 +16,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { toast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/auth-context";
 import { authenticateUser, User } from "@/lib/auth";
 import { Eye, EyeOff, AlertCircle } from "lucide-react";
 import { jwtDecode } from "jwt-decode";
 import { AuthResponse } from "@/types/auth";
+import { toast } from "@/components/ui/use-toast";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -95,10 +95,8 @@ export default function LoginPage() {
         login(userForContext);
 
         toast({
-          title: "Login berhasil!",
-          description: `Selamat datang, ${userForContext.name}`,
+          description: `Selamat datang, ${userForContext.name}!`,
         });
-        console.log({ userForContext });
 
         switch (userForContext.role) {
           case "student":
