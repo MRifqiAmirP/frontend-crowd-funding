@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react"; // Import useEffect
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,7 +26,10 @@ import {
   Loader2,
   AlertCircle,
   CheckCircle,
+  LogIn, // Import icon login
 } from "lucide-react";
+
+import { useAuth } from "@/contexts/auth-context";
 
 interface DonationFormProps {
   projectId: string;
@@ -48,12 +51,12 @@ export default function DonationFormEnhanced({
   rewards = [],
 }: DonationFormProps) {
   const router = useRouter();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  // Form data
   const [selectedAmount, setSelectedAmount] = useState<number>(0);
   const [customAmount, setCustomAmount] = useState<string>("");
   const [selectedReward, setSelectedReward] = useState<string | null>(null);
@@ -66,37 +69,57 @@ export default function DonationFormEnhanced({
     anonymous: false,
   });
 
-  // Predefined amounts
+  const [isFirstNameDisabled, setIsFirstNameDisabled] = useState(false);
+  const [isLastNameDisabled, setIsLastNameDisabled] = useState(false);
+  const [isEmailDisabled, setIsEmailDisabled] = useState(false);
+
   const predefinedAmounts = [25000, 50000, 100000, 250000, 500000, 1000000];
 
-  // Calculate totals
   const platformFee = calculatePlatformFee(selectedAmount);
   const totalAmount = selectedAmount + platformFee;
 
-  // --- NEW: Effect to sync selectedAmount with selectedReward ---
   useEffect(() => {
-    // Find if any reward matches the selectedAmount
     const matchingReward = rewards.find(
       (reward) => reward.amount === selectedAmount
     );
 
     if (matchingReward) {
-      // If a matching reward is found, select it
       if (selectedReward !== matchingReward.id) {
         setSelectedReward(matchingReward.id);
       }
     } else {
-      // If no matching reward is found, unselect any chosen reward
       if (selectedReward !== null) {
         setSelectedReward(null);
       }
     }
-  }, [selectedAmount, rewards, selectedReward]); // Dependencies: re-run when amount or rewards change
+  }, [selectedAmount, rewards, selectedReward]);
 
-  // Load Midtrans Snap script
+  useEffect(() => {
+    if (!isAuthLoading && user) {
+      setDonorInfo((prevInfo) => ({
+        ...prevInfo,
+        firstName: user.name?.split(" ")[0] || "",
+        lastName: user.name?.split(" ").slice(1).join(" ") || "",
+        email: user.email || "",
+      }));
+      setIsFirstNameDisabled(!!user.name);
+      setIsLastNameDisabled(!!user.name && user.name.split(" ").length > 1);
+      setIsEmailDisabled(!!user.email);
+    } else if (!isAuthLoading && !user) {
+      setIsFirstNameDisabled(false);
+      setIsLastNameDisabled(false);
+      setIsEmailDisabled(false);
+      setDonorInfo((prevInfo) => ({
+        ...prevInfo,
+        firstName: "",
+        lastName: "",
+        email: "",
+      }));
+    }
+  }, [user, isAuthLoading]);
+
   const loadSnapScript = () => {
     return new Promise((resolve, reject) => {
-      // Remove existing script if any
       const existingScript = document.getElementById("midtrans-snap");
       if (existingScript) {
         existingScript.remove();
@@ -105,23 +128,20 @@ export default function DonationFormEnhanced({
       const script = document.createElement("script");
       script.id = "midtrans-snap";
       script.src = MIDTRANS_CONFIG.snapUrl;
-      script.setAttribute("data-client-key", MIDTRANS_CONFIG.clientKey);
+      // script.setAttribute("data-client-key", MIDTRANS_CLIENT_KEY); // Pastikan ini sudah didefinisikan atau diimpor
       script.onload = resolve;
       script.onerror = reject;
       document.head.appendChild(script);
     });
   };
 
-  // Handle payment
   const handlePayment = async () => {
     try {
       setIsLoading(true);
       setError(null);
 
-      // Load Snap script
       await loadSnapScript();
 
-      // Create payment
       const response = await fetch("/api/payment/create", {
         method: "POST",
         headers: {
@@ -131,7 +151,7 @@ export default function DonationFormEnhanced({
           projectId,
           amount: selectedAmount,
           customerDetails: donorInfo,
-          rewardId: selectedReward, // Kirim selectedReward ke backend
+          rewardId: selectedReward,
         }),
       });
 
@@ -145,7 +165,6 @@ export default function DonationFormEnhanced({
         throw new Error("No payment token received");
       }
 
-      // Open Snap popup
       // @ts-ignore
       window.snap.pay(data.token, {
         onSuccess: (result: any) => {
@@ -178,32 +197,28 @@ export default function DonationFormEnhanced({
     }
   };
 
-  // Handle amount selection
   const handleAmountSelect = (amount: number) => {
     setSelectedAmount(amount);
-    setCustomAmount(""); // Clear custom amount when predefined is selected
+    setCustomAmount("");
   };
 
-  // Handle custom amount
   const handleCustomAmountChange = (value: string) => {
-    const rawValue = value.replace(/\D/g, ""); // Hapus semua non-digit
-    setCustomAmount(rawValue); // Simpan raw value untuk input
+    const rawValue = value.replace(/\D/g, "");
+    setCustomAmount(rawValue);
     const numValue = Number.parseInt(rawValue);
     if (!isNaN(numValue)) {
       setSelectedAmount(numValue);
     } else {
-      setSelectedAmount(0); // Set to 0 if input is empty or not a valid number
+      setSelectedAmount(0);
     }
   };
 
-  // Handle reward selection
   const handleRewardSelect = (rewardId: string, amount: number) => {
     setSelectedReward(rewardId);
-    setSelectedAmount(amount); // Set selectedAmount sesuai reward
-    setCustomAmount(amount.toString()); // Update customAmount input field
+    setSelectedAmount(amount);
+    setCustomAmount(amount.toString());
   };
 
-  // Handle next step
   const handleAmountNext = () => {
     if (selectedAmount < 10000) {
       setError("Minimum donasi adalah Rp 10.000");
@@ -213,22 +228,63 @@ export default function DonationFormEnhanced({
     setCurrentStep(2);
   };
 
-  // Handle info next (trigger payment)
   const handleInfoNext = async () => {
-    if (!donorInfo.firstName || !donorInfo.email) {
-      setError("Nama dan email wajib diisi");
+    if (!donorInfo.anonymous && (!donorInfo.firstName || !donorInfo.email)) {
+      setError("Nama dan email wajib diisi jika tidak anonim.");
       return;
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(donorInfo.email)) {
-      setError("Format email tidak valid");
+    if (
+      !donorInfo.anonymous &&
+      donorInfo.email &&
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(donorInfo.email)
+    ) {
+      setError("Format email tidak valid.");
       return;
     }
 
     setError(null);
     await handlePayment();
   };
+
+  // --- START NEW LOGIC FOR LOGIN REQUIREMENT ---
+  // Tampilkan loading state jika AuthProvider masih memuat user
+  if (isAuthLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <Loader2 className="h-10 w-10 animate-spin text-blue-500" />
+        <span className="ml-3 text-lg text-gray-600">
+          Memuat data pengguna...
+        </span>
+      </div>
+    );
+  }
+
+  // Tampilkan pesan dan tombol login jika user belum login
+  if (!user) {
+    return (
+      <div className="max-w-md mx-auto p-6 flex flex-col items-center justify-center min-h-[400px]">
+        <Alert className="mb-6 text-center border-orange-200 bg-orange-50">
+          <AlertCircle className="h-6 w-6 mx-auto text-orange-600 mb-2" />
+          <AlertDescription className="text-orange-800 text-base font-medium">
+            Anda harus login untuk melanjutkan donasi.
+          </AlertDescription>
+          <p className="text-sm text-gray-700 mt-2">
+            Silakan login untuk mengisi data donatur Anda secara otomatis dan
+            mempermudah proses.
+          </p>
+        </Alert>
+        <Button
+          onClick={() => router.push("/login")}
+          className="mt-4 px-6 py-3 text-lg"
+        >
+          <LogIn className="mr-2 h-5 w-5" />
+          Login Sekarang
+        </Button>
+      </div>
+    );
+  }
+  // --- END NEW LOGIC FOR LOGIN REQUIREMENT ---
 
   return (
     <div className="max-w-2xl mx-auto p-6">
@@ -423,6 +479,19 @@ export default function DonationFormEnhanced({
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            {user && (
+              <Alert className="mb-4 border-blue-200 bg-blue-50 text-blue-800">
+                <AlertCircle className="h-4 w-4 text-blue-600" />
+                <AlertDescription>
+                  Anda login sebagai{" "}
+                  <strong>
+                    {user.name} ({user.email})
+                  </strong>
+                  . Data Anda telah diisi otomatis.
+                </AlertDescription>
+              </Alert>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="firstName">Nama Depan *</Label>
@@ -433,6 +502,7 @@ export default function DonationFormEnhanced({
                     setDonorInfo({ ...donorInfo, firstName: e.target.value })
                   }
                   placeholder="Masukkan nama depan"
+                  disabled={isFirstNameDisabled || donorInfo.anonymous}
                 />
               </div>
               <div>
@@ -444,6 +514,7 @@ export default function DonationFormEnhanced({
                     setDonorInfo({ ...donorInfo, lastName: e.target.value })
                   }
                   placeholder="Masukkan nama belakang"
+                  disabled={isLastNameDisabled || donorInfo.anonymous}
                 />
               </div>
             </div>
@@ -461,10 +532,11 @@ export default function DonationFormEnhanced({
                   setDonorInfo({ ...donorInfo, email: e.target.value })
                 }
                 placeholder="nama@email.com"
+                disabled={isEmailDisabled || donorInfo.anonymous}
               />
             </div>
 
-            <div>
+            {/* <div>
               <Label htmlFor="phone" className="flex items-center gap-2">
                 <Phone className="h-4 w-4" />
                 Nomor Telepon
@@ -477,8 +549,9 @@ export default function DonationFormEnhanced({
                   setDonorInfo({ ...donorInfo, phone: e.target.value })
                 }
                 placeholder="08xxxxxxxxxx"
+                disabled={donorInfo.anonymous}
               />
-            </div>
+            </div> */}
 
             <div>
               <Label htmlFor="message" className="flex items-center gap-2">
@@ -493,6 +566,7 @@ export default function DonationFormEnhanced({
                 }
                 placeholder="Tulis pesan dukungan Anda..."
                 rows={3}
+                disabled={donorInfo.anonymous}
               />
             </div>
 
@@ -500,16 +574,38 @@ export default function DonationFormEnhanced({
               <Checkbox
                 id="anonymous"
                 checked={donorInfo.anonymous}
-                onCheckedChange={(checked) =>
-                  setDonorInfo({ ...donorInfo, anonymous: checked as boolean })
-                }
+                onCheckedChange={(checked) => {
+                  setDonorInfo((prev) => ({
+                    ...prev,
+                    anonymous: checked as boolean,
+                  }));
+                  if (checked) {
+                    setDonorInfo((prev) => ({
+                      ...prev,
+                      firstName: "",
+                      lastName: "",
+                      email: "",
+                      phone: "",
+                      message: "",
+                    }));
+                  } else {
+                    if (user) {
+                      setDonorInfo((prev) => ({
+                        ...prev,
+                        firstName: user.name?.split(" ")[0] || "",
+                        lastName:
+                          user.name?.split(" ").slice(1).join(" ") || "",
+                        email: user.email || "",
+                      }));
+                    }
+                  }
+                }}
               />
               <Label htmlFor="anonymous" className="text-sm">
                 Donasi sebagai anonim
               </Label>
             </div>
 
-            {/* Payment Summary */}
             <div className="bg-blue-50 rounded-lg p-4">
               <h4 className="font-medium mb-2">Ringkasan Pembayaran</h4>
               <div className="space-y-1 text-sm">
@@ -542,7 +638,11 @@ export default function DonationFormEnhanced({
               </Button>
               <Button
                 onClick={handleInfoNext}
-                disabled={isLoading || !donorInfo.firstName || !donorInfo.email}
+                disabled={
+                  isLoading ||
+                  (!donorInfo.anonymous &&
+                    (!donorInfo.firstName || !donorInfo.email))
+                }
                 className="flex-1"
               >
                 {isLoading ? (
@@ -556,7 +656,6 @@ export default function DonationFormEnhanced({
               </Button>
             </div>
 
-            {/* Sandbox Notice */}
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
               <p className="text-sm text-yellow-800">
                 <strong>Mode Sandbox:</strong> Ini adalah lingkungan testing.
