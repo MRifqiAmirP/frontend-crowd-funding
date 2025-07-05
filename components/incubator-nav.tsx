@@ -1,14 +1,24 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { Home, MessageSquare, DollarSign, BookOpen, TrendingUp, Calendar, Settings, Bell, Search } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { motion } from "framer-motion"
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import {
+  Home,
+  MessageSquare,
+  DollarSign,
+  BookOpen,
+  TrendingUp,
+  Calendar,
+  Settings,
+  Bell,
+  Search,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { motion } from "framer-motion";
 
 export default function IncubatorNav() {
-  const pathname = usePathname()
+  const pathname = usePathname();
 
   const navItems = [
     {
@@ -49,32 +59,36 @@ export default function IncubatorNav() {
       icon: TrendingUp,
       description: "Laporan dan insights",
     },
-  ]
+  ];
 
   // Function to determine if nav item is active
   const isActive = (item: (typeof navItems)[0]) => {
     if (item.exactMatch) {
-      return pathname === item.href
+      return pathname === item.href;
     }
-    return pathname.startsWith(item.href)
-  }
+    return pathname.startsWith(item.href);
+  };
 
   // Only show this nav on incubator pages
   if (!pathname.startsWith("/incubator")) {
-    return null
+    return null;
   }
 
   return (
     <nav className="bg-white border-b border-gray-200 sticky top-16 z-40 shadow-sm">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-14">
+        <div className="flex items-center justify-between h-14 ">
           {/* Navigation Links */}
-          <div className="flex items-center space-x-1 overflow-x-auto scrollbar-hide">
+          <div className="flex items-center space-x-1 scrollbar-hide">
             {navItems.map((item) => {
-              const active = isActive(item)
+              const active = isActive(item);
 
               return (
-                <Link key={item.href} href={item.href} className="relative group flex-shrink-0">
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="relative group flex-shrink-0"
+                >
                   <Button
                     variant={active ? "default" : "ghost"}
                     size="sm"
@@ -89,7 +103,9 @@ export default function IncubatorNav() {
                     {item.badge && (
                       <Badge
                         variant={active ? "secondary" : "outline"}
-                        className={`ml-1 text-xs ${active ? "bg-white/20 text-white border-white/30" : ""}`}
+                        className={`ml-1 text-xs ${
+                          active ? "bg-white/20 text-white border-white/30" : ""
+                        }`}
                       >
                         {item.badge}
                       </Badge>
@@ -101,7 +117,11 @@ export default function IncubatorNav() {
                     <motion.div
                       layoutId="incubator-nav-indicator"
                       className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-600 sm:hidden"
-                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 300,
+                        damping: 30,
+                      }}
                     />
                   )}
 
@@ -111,7 +131,7 @@ export default function IncubatorNav() {
                     <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
                   </div>
                 </Link>
-              )
+              );
             })}
           </div>
 
@@ -142,11 +162,13 @@ export default function IncubatorNav() {
           {navItems.map((item) => (
             <div
               key={item.href}
-              className={`w-2 h-2 rounded-full transition-colors ${isActive(item) ? "bg-purple-600" : "bg-gray-300"}`}
+              className={`w-2 h-2 rounded-full transition-colors ${
+                isActive(item) ? "bg-purple-600" : "bg-gray-300"
+              }`}
             />
           ))}
         </div>
       </div>
     </nav>
-  )
+  );
 }
