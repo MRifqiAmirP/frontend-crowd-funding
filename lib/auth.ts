@@ -1,4 +1,5 @@
 import { AuthResponse, ErrorResponse, RegisterResponse } from "@/types/auth"
+import apiClient from "./apiClient"
 
 export interface User {
   id: string
@@ -70,54 +71,35 @@ export const mockUsers: Record<string, { password: string; user: User }> = {
 
 export const authenticateUser = async (email: string, password: string): Promise<AuthResponse | null> => {
   const normalizedEmail = email.trim().toLowerCase();
-
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email: normalizedEmail, password }),
-      credentials: 'include',
+    const response = await apiClient.post<AuthResponse>('/api/auth/login', {
+      email: normalizedEmail,
+      password,
     });
-
-    if (!response.ok) {
-      // Tangani error jika respons tidak OK (misal: status 401 Unauthorized)
-      const errorData = await response.json();
-      console.error('Login failed:', errorData.message);
-      return null;
-    }
-
-    const data: AuthResponse = await response.json();
-
-    console.log({ data });
-
-    return data;
-  } catch (error) {
-    console.error('An error occurred during authentication:', error);
+    console.log({ data: response.data });
+    return response.data;
+  } catch (error: any) {
+    console.error('An error occurred during authentication:', error.response?.data?.message || error.message);
     return null;
   }
 };
 
 export const registerUser = async (formData: any): Promise<RegisterResponse | ErrorResponse> => {
-  const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/register`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(formData),
-    credentials: 'include', // Penting agar cookies (refresh_token) diterima browser
-  });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    // Backend mengembalikan status error (misal 400, 409)
-    // dan body respons adalah ErrorResponse
-    return data as ErrorResponse;
+  try {
+    const response = await apiClient.post<RegisterResponse>('/api/auth/register', formData);
+    return response.data;
+  } catch (error: any) {
+    console.error('An error occurred during registration:', error.response?.data?.message || error.message, error.response?.data);
+    return error.response?.data as ErrorResponse || { success: false, message: error.message || 'Unknown error occurred during registration.' };
   }
-
-  // Backend mengembalikan status sukses (misal 200, 201)
-  return data as RegisterResponse;
 };
 
+export const forgotPassword = async (email: string): Promise<{ success: boolean; message: string }> => {
+  try {
+    const response = await apiClient.post<{ success: boolean; message: string }>('/api/auth/forgot-password', { email });
+    return { success: response.data.success, message: response.data.message || "Link reset password telah dikirim ke email Anda." };
+  } catch (error: any) {
+    console.error('An error occurred during forgot password request:', error.response?.data?.message || error.message, error.response?.data);
+    return { success: false, message: error.response?.data?.message || "Terjadi kesalahan jaringan atau server. Silakan coba lagi nanti." };
+  }
+};

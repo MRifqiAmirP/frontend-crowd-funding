@@ -1,20 +1,27 @@
-"use client"
+"use client";
 
-import { useAuth } from "@/contexts/auth-context"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { BookOpen, DollarSign, Users, Plus, Award, Lightbulb } from "lucide-react"
-import Link from "next/link"
-import { motion } from "framer-motion"
+import { useAuth } from "@/contexts/auth-context";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  BookOpen,
+  DollarSign,
+  Users,
+  Plus,
+  Award,
+  Lightbulb,
+} from "lucide-react";
+import Link from "next/link";
+import { motion } from "framer-motion";
 
 export default function StudentDashboard() {
-  const { user } = useAuth()
+  const { user } = useAuth();
 
   if (!user || user.role !== "student") {
-    return <div>Access denied</div>
+    return <div>Access denied</div>;
   }
 
   const myProjects = [
@@ -38,20 +45,40 @@ export default function StudentDashboard() {
       backers: 0,
       daysLeft: 0,
     },
-  ]
+  ];
 
   const recentActivities = [
-    { type: "funding", message: "Anda menerima donasi Rp 500.000 untuk EcoWaste", time: "2 jam lalu" },
-    { type: "comment", message: "Komentar baru pada proyek EcoWaste", time: "5 jam lalu" },
-    { type: "milestone", message: "Milestone 'Prototype Development' tercapai", time: "1 hari lalu" },
-    { type: "mentor", message: "Sesi mentoring dengan Dr. Sarah Wijaya dijadwalkan", time: "2 hari lalu" },
-  ]
+    {
+      type: "funding",
+      message: "Anda menerima donasi Rp 500.000 untuk EcoWaste",
+      time: "2 jam lalu",
+    },
+    {
+      type: "comment",
+      message: "Komentar baru pada proyek EcoWaste",
+      time: "5 jam lalu",
+    },
+    {
+      type: "milestone",
+      message: "Milestone 'Prototype Development' tercapai",
+      time: "1 hari lalu",
+    },
+    {
+      type: "mentor",
+      message: "Sesi mentoring dengan Dr. Sarah Wijaya dijadwalkan",
+      time: "2 hari lalu",
+    },
+  ];
 
   const upcomingEvents = [
-    { title: "Workshop: Pitching Your Startup", date: "25 Jan 2024", time: "14:00" },
+    {
+      title: "Workshop: Pitching Your Startup",
+      date: "25 Jan 2024",
+      time: "14:00",
+    },
     { title: "Mentoring Session", date: "27 Jan 2024", time: "10:00" },
     { title: "Demo Day Preparation", date: "30 Jan 2024", time: "16:00" },
-  ]
+  ];
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -59,7 +86,13 @@ export default function StudentDashboard() {
       <div className="mb-8">
         <div className="flex items-center space-x-4 mb-4">
           <Avatar className="h-16 w-16">
-            <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name} />
+            <AvatarImage
+              src={
+                user.avatar ||
+                `https://api.dicebear.com/9.x/dylan/svg?seed=${user.name}`
+              }
+              alt={user.name}
+            />
             <AvatarFallback>
               {user.name
                 .split(" ")
@@ -74,7 +107,9 @@ export default function StudentDashboard() {
             </p>
             <div className="flex items-center space-x-2 mt-2">
               <Badge variant="secondary">Pelajar</Badge>
-              {user.profile?.verified && <Badge variant="default">Terverifikasi</Badge>}
+              {user.profile?.verified && (
+                <Badge variant="default">Terverifikasi</Badge>
+              )}
             </div>
           </div>
         </div>
@@ -85,7 +120,9 @@ export default function StudentDashboard() {
         <motion.div whileHover={{ scale: 1.02 }}>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Proyek Aktif</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Proyek Aktif
+              </CardTitle>
               <Lightbulb className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -98,12 +135,16 @@ export default function StudentDashboard() {
         <motion.div whileHover={{ scale: 1.02 }}>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Pendanaan</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Total Pendanaan
+              </CardTitle>
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">Rp 15M</div>
-              <p className="text-xs text-muted-foreground">+20% dari bulan lalu</p>
+              <p className="text-xs text-muted-foreground">
+                +20% dari bulan lalu
+              </p>
             </CardContent>
           </Card>
         </motion.div>
@@ -111,7 +152,9 @@ export default function StudentDashboard() {
         <motion.div whileHover={{ scale: 1.02 }}>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Pendukung</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Total Pendukung
+              </CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -124,7 +167,9 @@ export default function StudentDashboard() {
         <motion.div whileHover={{ scale: 1.02 }}>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Sesi Mentoring</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Sesi Mentoring
+              </CardTitle>
               <BookOpen className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -157,7 +202,11 @@ export default function StudentDashboard() {
                   <div className="flex items-start justify-between mb-3">
                     <div>
                       <h3 className="font-semibold">{project.title}</h3>
-                      <Badge variant={project.status === "active" ? "default" : "secondary"}>
+                      <Badge
+                        variant={
+                          project.status === "active" ? "default" : "secondary"
+                        }
+                      >
                         {project.status === "active" ? "Aktif" : "Draft"}
                       </Badge>
                     </div>
@@ -179,7 +228,9 @@ export default function StudentDashboard() {
                       <div className="grid grid-cols-3 gap-4 text-sm">
                         <div>
                           <p className="text-gray-600">Terkumpul</p>
-                          <p className="font-semibold">Rp {(project.funded / 1000000).toFixed(1)}M</p>
+                          <p className="font-semibold">
+                            Rp {(project.funded / 1000000).toFixed(1)}M
+                          </p>
                         </div>
                         <div>
                           <p className="text-gray-600">Pendukung</p>
@@ -232,13 +283,21 @@ export default function StudentDashboard() {
                   Buat Proyek Baru
                 </Link>
               </Button>
-              <Button variant="outline" className="w-full justify-start" asChild>
+              <Button
+                variant="outline"
+                className="w-full justify-start"
+                asChild
+              >
                 <Link href="/incubator">
                   <BookOpen className="h-4 w-4 mr-2" />
                   Akses Incubator
                 </Link>
               </Button>
-              <Button variant="outline" className="w-full justify-start" asChild>
+              <Button
+                variant="outline"
+                className="w-full justify-start"
+                asChild
+              >
                 <Link href="/portfolio">
                   <Award className="h-4 w-4 mr-2" />
                   Lihat Portfolio
@@ -296,5 +355,5 @@ export default function StudentDashboard() {
         </div>
       </div>
     </div>
-  )
+  );
 }

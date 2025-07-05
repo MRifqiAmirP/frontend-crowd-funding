@@ -29,6 +29,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [detailError, setDetailError] = useState<string[] | undefined>([]);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -114,6 +115,7 @@ export default function LoginPage() {
         }
       } else {
         setError(authResponse?.message || "Email atau password salah");
+        setDetailError(authResponse?.errors);
       }
     } catch (error) {
       console.error("Login error:", error);
@@ -165,6 +167,9 @@ export default function LoginPage() {
                   <Alert variant="destructive">
                     <AlertCircle className="h-4 w-4" />
                     <AlertDescription>{error}</AlertDescription>
+                    <AlertDescription>
+                      {detailError && detailError.join(", ")}
+                    </AlertDescription>
                   </Alert>
                 )}
 

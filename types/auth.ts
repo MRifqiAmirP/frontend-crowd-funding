@@ -4,6 +4,7 @@ export interface AuthResponse {
     data: {
         idToken: string;
     }
+    errors?: string[]
 }
 
 export interface RegisterUserData {
