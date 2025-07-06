@@ -1,11 +1,13 @@
-export interface AuthResponse {
+export interface Response<T> {
     success: boolean;
     message: string;
-    data: {
-        idToken: string;
-    }
+    data: T
     errors?: string[]
 }
+
+export type AuthResponse = Response<{
+    idToken: string;
+}>
 
 export interface RegisterUserData {
     id: string;
