@@ -48,6 +48,8 @@ export default function LoginPage() {
 
       if (authResponse && authResponse.success) {
         const idToken = authResponse.data.idToken;
+        console.log({ authResponse });
+
         let decodedToken: {
           sub: string;
           email: string;

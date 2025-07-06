@@ -16,36 +16,70 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import { getProjects, Project } from "@/lib/project";
+import { toast } from "@/components/ui/use-toast";
 
 export default function StudentDashboard() {
   const { user } = useAuth();
+  const [myProjects, setMyProjects] = useState<Project[]>([]);
+  const [loadingProjects, setLoadingProjects] = useState(true);
+  const [errorProjects, setErrorProjects] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchMyProjects = async () => {
+      if (!user) return;
+
+      setLoadingProjects(true);
+      setErrorProjects(null);
+      try {
+        const response = await getProjects(); // Menerima objek respons dari API
+        console.log({ projectsData: response, user }); // Log objek respons keseluruhan
+
+        // --- PERBAIKAN UTAMA DI SINI ---
+        // Pastikan response dan response.data ada, dan response.data.data adalah array
+        if (response && response.success && Array.isArray(response.data)) {
+          const projectsData = response.data; // Array proyek yang sebenarnya
+
+          // Filter proyek berdasarkan user.id jika API menyediakan 'userId' di setiap proyek
+          const userProjects = projectsData.filter(
+            (project) => project.userId === user.id // Asumsi project.userId cocok dengan user.id dari auth context
+            // Atau, jika Anda ingin memfilter berdasarkan provider/sekolah:
+            // (project.provider === user.profile?.school)
+            // (project.institutionName === user.profile?.school) // Sesuaikan dengan properti yang benar
+          );
+          setMyProjects(userProjects);
+        } else {
+          // Handle case where data is not an array or API response is not successful
+          const errorMessage =
+            response?.message || "Format data proyek tidak sesuai.";
+          setErrorProjects(errorMessage);
+          toast({
+            title: "Gagal memuat proyek",
+            description: errorMessage,
+            type: "error", // Gunakan variant "destructive" untuk error
+          });
+        }
+      } catch (error: any) {
+        console.error("Failed to fetch projects:", error);
+        setErrorProjects(error.message || "Gagal memuat proyek.");
+        toast({
+          title: "Gagal memuat proyek",
+          description:
+            error.message || "Terjadi kesalahan saat mengambil data proyek.",
+          type: "error",
+        });
+      } finally {
+        setLoadingProjects(false);
+      }
+    };
+
+    fetchMyProjects();
+  }, [user]);
 
   if (!user || user.role !== "student") {
     return <div>Access denied</div>;
   }
-
-  const myProjects = [
-    {
-      id: 1,
-      title: "EcoWaste - Aplikasi Pengelolaan Sampah",
-      status: "active",
-      progress: 75,
-      funded: 15000000,
-      target: 20000000,
-      backers: 45,
-      daysLeft: 12,
-    },
-    {
-      id: 2,
-      title: "StudyBuddy - Platform Belajar Kolaboratif",
-      status: "draft",
-      progress: 0,
-      funded: 0,
-      target: 15000000,
-      backers: 0,
-      daysLeft: 0,
-    },
-  ];
 
   const recentActivities = [
     {
@@ -79,6 +113,25 @@ export default function StudentDashboard() {
     { title: "Mentoring Session", date: "27 Jan 2024", time: "10:00" },
     { title: "Demo Day Preparation", date: "30 Jan 2024", time: "16:00" },
   ];
+
+  // Helper function to format currency
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  // Helper function to calculate days left
+  const calculateDaysLeft = (deadline: string) => {
+    const today = new Date();
+    const deadlineDate = new Date(deadline);
+    const diffTime = deadlineDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 0 ? diffDays : 0;
+  };
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -126,8 +179,14 @@ export default function StudentDashboard() {
               <Lightbulb className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">2</div>
-              <p className="text-xs text-muted-foreground">1 sedang berjalan</p>
+              <div className="text-2xl font-bold">
+                {myProjects.filter((p) => p.status === "active").length}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {myProjects.filter((p) => p.status === "active").length > 0
+                  ? "Beberapa sedang berjalan"
+                  : "Tidak ada proyek aktif"}
+              </p>
             </CardContent>
           </Card>
         </motion.div>
@@ -141,9 +200,13 @@ export default function StudentDashboard() {
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">Rp 15M</div>
+              <div className="text-2xl font-bold">
+                {formatCurrency(
+                  myProjects.reduce((sum, p) => sum + (p.funded || 0), 0)
+                )}
+              </div>
               <p className="text-xs text-muted-foreground">
-                +20% dari bulan lalu
+                Total dari proyek Anda
               </p>
             </CardContent>
           </Card>
@@ -158,8 +221,12 @@ export default function StudentDashboard() {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">45</div>
-              <p className="text-xs text-muted-foreground">Dari 2 proyek</p>
+              <div className="text-2xl font-bold">
+                {myProjects.reduce((sum, p) => sum + (p.backers || 0), 0)}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Dari {myProjects.length} proyek
+              </p>
             </CardContent>
           </Card>
         </motion.div>
@@ -197,54 +264,99 @@ export default function StudentDashboard() {
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              {myProjects.map((project) => (
-                <div key={project.id} className="border rounded-lg p-4">
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <h3 className="font-semibold">{project.title}</h3>
-                      <Badge
-                        variant={
-                          project.status === "active" ? "default" : "secondary"
-                        }
-                      >
-                        {project.status === "active" ? "Aktif" : "Draft"}
-                      </Badge>
-                    </div>
-                    <Button variant="outline" size="sm">
-                      Kelola
-                    </Button>
-                  </div>
-
-                  {project.status === "active" && (
-                    <>
-                      <div className="space-y-2 mb-3">
-                        <div className="flex justify-between text-sm">
-                          <span>Progress Pendanaan</span>
-                          <span>{project.progress}%</span>
-                        </div>
-                        <Progress value={project.progress} />
-                      </div>
-
-                      <div className="grid grid-cols-3 gap-4 text-sm">
-                        <div>
-                          <p className="text-gray-600">Terkumpul</p>
-                          <p className="font-semibold">
-                            Rp {(project.funded / 1000000).toFixed(1)}M
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-gray-600">Pendukung</p>
-                          <p className="font-semibold">{project.backers}</p>
-                        </div>
-                        <div>
-                          <p className="text-gray-600">Sisa Hari</p>
-                          <p className="font-semibold">{project.daysLeft}</p>
-                        </div>
-                      </div>
-                    </>
-                  )}
+              {loadingProjects ? (
+                <div className="text-center text-gray-500">
+                  Memuat proyek...
                 </div>
-              ))}
+              ) : errorProjects ? (
+                <div className="text-center text-red-500">
+                  Error: {errorProjects}
+                </div>
+              ) : myProjects.length === 0 ? (
+                <div className="text-center text-gray-500">
+                  Anda belum memiliki proyek. Buat proyek baru!
+                </div>
+              ) : (
+                myProjects.map((project) => (
+                  <div key={project.id} className="border rounded-lg p-4">
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <h3 className="font-semibold">{project.projectName}</h3>
+                        <Badge
+                          variant={
+                            project.status === "active"
+                              ? "default"
+                              : "secondary"
+                          }
+                        >
+                          {project.status === "active"
+                            ? "Aktif"
+                            : project.status === "draft"
+                            ? "Draft"
+                            : project.status}
+                        </Badge>
+                      </div>
+                      <Button variant="outline" size="sm">
+                        Kelola
+                      </Button>
+                    </div>
+
+                    {project.status === "active" && (
+                      <>
+                        <div className="space-y-2 mb-3">
+                          <div className="flex justify-between text-sm">
+                            <span>Progress Pendanaan</span>
+                            <span>
+                              {project.target > 0
+                                ? Math.min(
+                                    100,
+                                    Math.round(
+                                      ((project.funded || 0) / project.target) *
+                                        100
+                                    )
+                                  )
+                                : 0}
+                              %
+                            </span>
+                          </div>
+                          <Progress
+                            value={
+                              project.target > 0
+                                ? Math.min(
+                                    100,
+                                    ((project.funded || 0) / project.target) *
+                                      100
+                                  )
+                                : 0
+                            }
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-4 text-sm">
+                          <div>
+                            <p className="text-gray-600">Terkumpul</p>
+                            <p className="font-semibold">
+                              {formatCurrency(project.funded || 0)}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-gray-600">Pendukung</p>
+                            <p className="font-semibold">
+                              {project.backers || 0}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-gray-600">Sisa Hari</p>
+                            <p className="font-semibold">
+                              {calculateDaysLeft(project.deadline)}
+                            </p>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ))
+              )}
             </CardContent>
           </Card>
 

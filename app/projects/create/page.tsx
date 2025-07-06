@@ -1,62 +1,209 @@
-"use client"
+"use client";
 
-import type React from "react"
-
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { toast } from "@/components/ui/use-toast"
-import { Upload, Info, Plus, Trash2 } from "lucide-react"
+import type React from "react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from "@/components/ui/use-toast";
+import { Upload, Info, Plus, Trash2 } from "lucide-react";
+import { createProject } from "@/lib/project";
 
 export default function CreateProjectPage() {
-  const router = useRouter()
-  const [activeTab, setActiveTab] = useState("informasi")
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [rewards, setRewards] = useState([{ title: "", amount: "", description: "" }])
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState("informasi");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [rewards, setRewards] = useState([
+    { title: "", amount: "", description: "" },
+  ]);
+
+  const [formData, setFormData] = useState({
+    projectName: "",
+    category: "",
+    school: "",
+    target: "",
+    duration: "",
+    shortDescription: "",
+    fullDescription: "",
+    thumbnail: null as File | null,
+    galleries: [] as File[],
+    videoUrl: "",
+  });
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { id, value } = e.target;
+    setFormData((prev) => ({ ...prev, [id]: value }));
+  };
+
+  const handleSelectChange = (value: string) => {
+    setFormData((prev) => ({ ...prev, category: value }));
+  };
+
+  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log("Files from input thumbnail:", e.target.files);
+    if (e.target.files && e.target.files[0]) {
+      setFormData((prev) => ({ ...prev, thumbnail: e.target.files![0] }));
+      console.log("Thumbnail set in state:", e.target.files[0]);
+    } else {
+      setFormData((prev) => ({ ...prev, thumbnail: null }));
+      console.log("No thumbnail file selected or invalid file.");
+    }
+  };
+
+  const handleGalleryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log("Files from input galleries:", e.target.files);
+    if (e.target.files) {
+      setFormData((prev) => ({
+        ...prev,
+        galleries: Array.from(e.target.files!),
+      }));
+      console.log("Galleries set in state:", Array.from(e.target.files!));
+    } else {
+      setFormData((prev) => ({ ...prev, galleries: [] }));
+      console.log("No gallery files selected.");
+    }
+  };
 
   const handleAddReward = () => {
-    setRewards([...rewards, { title: "", amount: "", description: "" }])
-  }
+    setRewards([...rewards, { title: "", amount: "", description: "" }]);
+  };
 
   const handleRemoveReward = (index: number) => {
-    const newRewards = [...rewards]
-    newRewards.splice(index, 1)
-    setRewards(newRewards)
-  }
+    const newRewards = [...rewards];
+    newRewards.splice(index, 1);
+    setRewards(newRewards);
+  };
 
   const handleRewardChange = (index: number, field: string, value: string) => {
-    const newRewards = [...rewards]
-    newRewards[index] = { ...newRewards[index], [field]: value }
-    setRewards(newRewards)
-  }
+    const newRewards = [...rewards];
+    newRewards[index] = { ...newRewards[index], [field]: value };
+    setRewards(newRewards);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
+    e.preventDefault();
+    setIsSubmitting(true);
 
-    // Simulate API call
-    setTimeout(() => {
+    const formApiData = new FormData();
+
+    // Mengembalikan properti ke level teratas FormData seperti yang diharapkan backend
+    formApiData.append("projectName", formData.projectName);
+    formApiData.append("provider", formData.school);
+    formApiData.append("educationLevel", "Perguruan Tinggi"); // Sesuaikan jika dinamis
+    formApiData.append("institutionName", formData.school);
+    formApiData.append("shortDescription", formData.shortDescription);
+    formApiData.append("fullDescription", formData.fullDescription);
+    formApiData.append("aboutProject", formData.fullDescription); // Asumsi sama
+    formApiData.append("target", formData.target); // Dikirim sebagai string, backend harus mem-parse
+
+    // Menghitung deadline
+    const today = new Date();
+    const deadlineDate = new Date(
+      today.setDate(today.getDate() + parseInt(formData.duration))
+    );
+    formApiData.append("deadline", deadlineDate.toISOString().split("T")[0]);
+
+    formApiData.append("categoryNames", formData.category);
+
+    // Menambahkan thumbnail (kembali ke format file terpisah)
+    console.log("formData.thumbnail before append:", formData.thumbnail);
+    if (formData.thumbnail) {
+      formApiData.append(
+        "thumbnail",
+        formData.thumbnail,
+        formData.thumbnail.name
+      );
+      console.log("Thumbnail appended:", formData.thumbnail.name);
+    } else {
+      console.log("No thumbnail file selected or available.");
+    }
+
+    // Menambahkan galeri (kembali ke format file terpisah)
+    formData.galleries.forEach((file) => {
+      formApiData.append("galleries", file, file.name);
+    });
+    formData.galleries.forEach((file) => {
+      formApiData.append("galleryCaptions", file.name); // Asumsi caption sama
+    });
+    console.log(
+      "Galleries appended:",
+      formData.galleries.map((f) => f.name)
+    );
+
+    // ! REWARD TIDAK DISIMPAN
+    // const formattedRewards = rewards.map((reward) => ({
+    //   title: reward.title,
+    //   amount: parseInt(reward.amount),
+    //   description: reward.description,
+    // }));
+    // formApiData.append("rewards", JSON.stringify(formattedRewards));
+    // console.log(
+    //   "Rewards appended as JSON string:",
+    //   JSON.stringify(formattedRewards)
+    // );
+
+    // Menambahkan URL video jika ada
+    if (formData.videoUrl) {
+      formApiData.append("videoUrl", formData.videoUrl);
+    }
+
+    // Untuk debugging, lihat isi FormData
+    for (let [key, value] of formApiData.entries()) {
+      console.log(`${key}:`, value);
+    }
+
+    try {
+      const response = await createProject(formApiData);
+      console.log("Project creation response:", response);
       toast({
         title: "Proyek berhasil dibuat!",
         description: "Proyek Anda sedang dalam peninjauan oleh tim kami.",
-      })
-      setIsSubmitting(false)
-      router.push("/dashboard/projects")
-    }, 1500)
-  }
+        type: "success",
+      });
+      router.back();
+    } catch (error: any) {
+      console.error(
+        "An error occurred during project creation:",
+        error.response?.data?.message || error.message
+      );
+      toast({
+        title: "Gagal membuat proyek.",
+        description: Array.isArray(error.response?.data?.message)
+          ? error.response.data.message.join(", ")
+          : error.message || "Terjadi kesalahan saat membuat proyek.",
+        type: "error",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="container mx-auto px-4 md:px-6 py-8">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold mb-2">Buat Proyek Baru</h1>
         <p className="text-gray-600 mb-8">
-          Isi formulir berikut untuk membuat kampanye crowdfunding untuk proyek kewirausahaanmu
+          Isi formulir berikut untuk membuat kampanye crowdfunding untuk proyek
+          kewirausahaanmu
         </p>
 
         <form onSubmit={handleSubmit}>
@@ -72,38 +219,64 @@ export default function CreateProjectPage() {
               <TabsContent value="informasi">
                 <CardHeader>
                   <CardTitle>Informasi Dasar</CardTitle>
-                  <CardDescription>Masukkan informasi dasar tentang proyekmu</CardDescription>
+                  <CardDescription>
+                    Masukkan informasi dasar tentang proyekmu
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="title">Judul Proyek</Label>
-                      <Input id="title" placeholder="Masukkan judul proyek yang menarik" required />
+                      <Label htmlFor="projectName">Judul Proyek</Label>
+                      <Input
+                        id="projectName"
+                        placeholder="Masukkan judul proyek yang menarik"
+                        value={formData.projectName}
+                        onChange={handleChange}
+                        required
+                      />
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="category">Kategori</Label>
-                        <Select required>
+                        <Select
+                          value={formData.category}
+                          onValueChange={handleSelectChange}
+                          required
+                        >
                           <SelectTrigger id="category">
                             <SelectValue placeholder="Pilih kategori" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="teknologi">Teknologi</SelectItem>
-                            <SelectItem value="edukasi">Edukasi</SelectItem>
-                            <SelectItem value="lingkungan">Lingkungan</SelectItem>
-                            <SelectItem value="kesehatan">Kesehatan</SelectItem>
-                            <SelectItem value="sosial">Sosial</SelectItem>
-                            <SelectItem value="agrikultur">Agrikultur</SelectItem>
-                            <SelectItem value="seni">Seni & Budaya</SelectItem>
-                            <SelectItem value="ecommerce">E-Commerce</SelectItem>
+                            <SelectItem value="Teknologi">Teknologi</SelectItem>
+                            <SelectItem value="Edukasi">Edukasi</SelectItem>
+                            <SelectItem value="Lingkungan">
+                              Lingkungan
+                            </SelectItem>
+                            <SelectItem value="Kesehatan">Kesehatan</SelectItem>
+                            <SelectItem value="Sosial">Sosial</SelectItem>
+                            <SelectItem value="Agrikultur">
+                              Agrikultur
+                            </SelectItem>
+                            <SelectItem value="Seni & Budaya">
+                              Seni & Budaya
+                            </SelectItem>
+                            <SelectItem value="E-Commerce">
+                              E-Commerce
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
 
                       <div className="space-y-2">
                         <Label htmlFor="school">Sekolah/Kampus</Label>
-                        <Input id="school" placeholder="Nama sekolah atau kampus" required />
+                        <Input
+                          id="school"
+                          placeholder="Nama sekolah atau kampus"
+                          value={formData.school}
+                          onChange={handleChange}
+                          required
+                        />
                       </div>
                     </div>
 
@@ -116,29 +289,47 @@ export default function CreateProjectPage() {
                           min="1000000"
                           step="100000"
                           placeholder="Contoh: 10000000"
+                          value={formData.target}
+                          onChange={handleChange}
                           required
                         />
                       </div>
 
                       <div className="space-y-2">
                         <Label htmlFor="duration">Durasi Kampanye (Hari)</Label>
-                        <Input id="duration" type="number" min="7" max="60" placeholder="Contoh: 30" required />
+                        <Input
+                          id="duration"
+                          type="number"
+                          min="7"
+                          max="60"
+                          placeholder="Contoh: 30"
+                          value={formData.duration}
+                          onChange={handleChange}
+                          required
+                        />
                       </div>
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="short-desc">Deskripsi Singkat</Label>
+                      <Label htmlFor="shortDescription">
+                        Deskripsi Singkat
+                      </Label>
                       <Textarea
-                        id="short-desc"
+                        id="shortDescription"
                         placeholder="Jelaskan secara singkat tentang proyekmu (maksimal 200 karakter)"
                         maxLength={200}
+                        value={formData.shortDescription}
+                        onChange={handleChange}
                         required
                       />
                     </div>
                   </div>
 
                   <div className="flex justify-end">
-                    <Button type="button" onClick={() => setActiveTab("deskripsi")}>
+                    <Button
+                      type="button"
+                      onClick={() => setActiveTab("deskripsi")}
+                    >
                       Selanjutnya
                     </Button>
                   </div>
@@ -148,21 +339,29 @@ export default function CreateProjectPage() {
               <TabsContent value="deskripsi">
                 <CardHeader>
                   <CardTitle>Deskripsi Proyek</CardTitle>
-                  <CardDescription>Jelaskan secara detail tentang proyekmu</CardDescription>
+                  <CardDescription>
+                    Jelaskan secara detail tentang proyekmu
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="full-desc">Deskripsi Lengkap</Label>
+                    <Label htmlFor="fullDescription">Deskripsi Lengkap</Label>
                     <Textarea
-                      id="full-desc"
+                      id="fullDescription"
                       placeholder="Jelaskan secara detail tentang proyekmu, termasuk latar belakang, tujuan, dan rencana penggunaan dana"
                       className="min-h-[300px]"
+                      value={formData.fullDescription}
+                      onChange={handleChange}
                       required
                     />
                   </div>
 
                   <div className="flex justify-between">
-                    <Button type="button" variant="outline" onClick={() => setActiveTab("informasi")}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setActiveTab("informasi")}
+                    >
                       Sebelumnya
                     </Button>
                     <Button type="button" onClick={() => setActiveTab("media")}>
@@ -175,57 +374,128 @@ export default function CreateProjectPage() {
               <TabsContent value="media">
                 <CardHeader>
                   <CardTitle>Media Proyek</CardTitle>
-                  <CardDescription>Unggah gambar atau video untuk proyekmu</CardDescription>
+                  <CardDescription>
+                    Unggah gambar atau video untuk proyekmu
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-4">
                     <div>
-                      <Label className="mb-2 block">Gambar Utama</Label>
+                      <Label htmlFor="thumbnail" className="mb-2 block">
+                        Gambar Utama
+                      </Label>
                       <div className="border-2 border-dashed rounded-lg p-6 text-center">
                         <Upload className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                        <p className="text-sm text-gray-500 mb-2">Klik atau seret file ke sini</p>
-                        <p className="text-xs text-gray-400">PNG, JPG, atau GIF (maks. 5MB)</p>
-                        <Input type="file" className="hidden" accept="image/*" />
-                        <Button type="button" variant="outline" size="sm" className="mt-4">
+                        <p className="text-sm text-gray-500 mb-2">
+                          Klik atau seret file ke sini
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          PNG, JPG, atau GIF (maks. 5MB)
+                        </p>
+                        <Input
+                          id="thumbnail"
+                          type="file"
+                          className="hidden"
+                          accept="image/*"
+                          onChange={handleThumbnailChange}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="mt-4"
+                          onClick={() =>
+                            document.getElementById("thumbnail")?.click()
+                          }
+                        >
                           Pilih File
                         </Button>
+                        {formData.thumbnail && (
+                          <p className="text-sm text-gray-500 mt-2">
+                            {formData.thumbnail.name}
+                          </p>
+                        )}
                       </div>
                     </div>
 
                     <div>
-                      <Label className="mb-2 block">Galeri Proyek (Opsional)</Label>
+                      <Label htmlFor="galleries" className="mb-2 block">
+                        Galeri Proyek (Opsional)
+                      </Label>
                       <div className="border-2 border-dashed rounded-lg p-6 text-center">
                         <Upload className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                        <p className="text-sm text-gray-500 mb-2">Unggah hingga 5 gambar tambahan</p>
-                        <p className="text-xs text-gray-400">PNG, JPG, atau GIF (maks. 5MB per file)</p>
-                        <Input type="file" className="hidden" accept="image/*" multiple />
-                        <Button type="button" variant="outline" size="sm" className="mt-4">
+                        <p className="text-sm text-gray-500 mb-2">
+                          Unggah hingga 5 gambar tambahan
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          PNG, JPG, atau GIF (maks. 5MB per file)
+                        </p>
+                        <Input
+                          id="galleries"
+                          type="file"
+                          className="hidden"
+                          accept="image/*"
+                          multiple
+                          onChange={handleGalleryChange}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="mt-4"
+                          onClick={() =>
+                            document.getElementById("galleries")?.click()
+                          }
+                        >
                           Pilih File
                         </Button>
+                        {formData.galleries.length > 0 && (
+                          <ul className="mt-2 text-sm text-gray-500 list-disc list-inside">
+                            {formData.galleries.map((file, index) => (
+                              <li key={index}>{file.name}</li>
+                            ))}
+                          </ul>
+                        )}
                       </div>
                     </div>
 
                     <div>
-                      <Label className="mb-2 block">Video Proyek (Opsional)</Label>
+                      <Label htmlFor="videoUrl" className="mb-2 block">
+                        Video Proyek (Opsional)
+                      </Label>
                       <div className="border-2 border-dashed rounded-lg p-6 text-center">
                         <Upload className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                        <p className="text-sm text-gray-500 mb-2">Unggah video atau masukkan URL YouTube/Vimeo</p>
-                        <p className="text-xs text-gray-400">MP4, MOV (maks. 50MB) atau URL</p>
+                        <p className="text-sm text-gray-500 mb-2">
+                          Unggah video atau masukkan URL YouTube/Vimeo
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          MP4, MOV (maks. 50MB) atau URL
+                        </p>
                         <div className="flex gap-2 mt-4 justify-center">
-                          <Button type="button" variant="outline" size="sm">
-                            Pilih File
-                          </Button>
-                          <Input placeholder="Atau masukkan URL video" className="max-w-xs" />
+                          <Input
+                            id="videoUrl"
+                            placeholder="Atau masukkan URL video"
+                            className="max-w-xs"
+                            value={formData.videoUrl}
+                            onChange={handleChange}
+                          />
                         </div>
                       </div>
                     </div>
                   </div>
 
                   <div className="flex justify-between">
-                    <Button type="button" variant="outline" onClick={() => setActiveTab("deskripsi")}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setActiveTab("deskripsi")}
+                    >
                       Sebelumnya
                     </Button>
-                    <Button type="button" onClick={() => setActiveTab("rewards")}>
+                    <Button
+                      type="button"
+                      onClick={() => setActiveTab("rewards")}
+                    >
                       Selanjutnya
                     </Button>
                   </div>
@@ -235,22 +505,33 @@ export default function CreateProjectPage() {
               <TabsContent value="rewards">
                 <CardHeader>
                   <CardTitle>Rewards</CardTitle>
-                  <CardDescription>Tentukan rewards untuk pendukung proyekmu</CardDescription>
+                  <CardDescription>
+                    Tentukan rewards untuk pendukung proyekmu
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="flex items-center gap-2 mb-4">
                     <Info className="h-4 w-4 text-blue-500" />
                     <p className="text-sm text-gray-600">
-                      Rewards yang menarik dapat meningkatkan jumlah pendukung proyekmu
+                      Rewards yang menarik dapat meningkatkan jumlah pendukung
+                      proyekmu
                     </p>
                   </div>
 
                   {rewards.map((reward, index) => (
-                    <div key={index} className="border rounded-lg p-4 space-y-4">
+                    <div
+                      key={index}
+                      className="border rounded-lg p-4 space-y-4"
+                    >
                       <div className="flex justify-between items-center">
                         <h3 className="font-medium">Reward #{index + 1}</h3>
                         {rewards.length > 1 && (
-                          <Button type="button" variant="ghost" size="sm" onClick={() => handleRemoveReward(index)}>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleRemoveReward(index)}
+                          >
                             <Trash2 className="h-4 w-4 text-red-500" />
                           </Button>
                         )}
@@ -259,18 +540,28 @@ export default function CreateProjectPage() {
                       <div className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="space-y-2">
-                            <Label htmlFor={`reward-title-${index}`}>Judul Reward</Label>
+                            <Label htmlFor={`reward-title-${index}`}>
+                              Judul Reward
+                            </Label>
                             <Input
                               id={`reward-title-${index}`}
                               placeholder="Contoh: Early Bird, Supporter, dll."
                               value={reward.title}
-                              onChange={(e) => handleRewardChange(index, "title", e.target.value)}
+                              onChange={(e) =>
+                                handleRewardChange(
+                                  index,
+                                  "title",
+                                  e.target.value
+                                )
+                              }
                               required
                             />
                           </div>
 
                           <div className="space-y-2">
-                            <Label htmlFor={`reward-amount-${index}`}>Jumlah Donasi (Rp)</Label>
+                            <Label htmlFor={`reward-amount-${index}`}>
+                              Jumlah Donasi (Rp)
+                            </Label>
                             <Input
                               id={`reward-amount-${index}`}
                               type="number"
@@ -278,19 +569,33 @@ export default function CreateProjectPage() {
                               step="10000"
                               placeholder="Contoh: 100000"
                               value={reward.amount}
-                              onChange={(e) => handleRewardChange(index, "amount", e.target.value)}
+                              onChange={(e) =>
+                                handleRewardChange(
+                                  index,
+                                  "amount",
+                                  e.target.value
+                                )
+                              }
                               required
                             />
                           </div>
                         </div>
 
                         <div className="space-y-2">
-                          <Label htmlFor={`reward-desc-${index}`}>Deskripsi Reward</Label>
+                          <Label htmlFor={`reward-desc-${index}`}>
+                            Deskripsi Reward
+                          </Label>
                           <Textarea
                             id={`reward-desc-${index}`}
                             placeholder="Jelaskan apa yang akan didapatkan pendukung"
                             value={reward.description}
-                            onChange={(e) => handleRewardChange(index, "description", e.target.value)}
+                            onChange={(e) =>
+                              handleRewardChange(
+                                index,
+                                "description",
+                                e.target.value
+                              )
+                            }
                             required
                           />
                         </div>
@@ -309,7 +614,11 @@ export default function CreateProjectPage() {
                   </Button>
 
                   <div className="flex justify-between">
-                    <Button type="button" variant="outline" onClick={() => setActiveTab("media")}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setActiveTab("media")}
+                    >
                       Sebelumnya
                     </Button>
                     <Button type="submit" disabled={isSubmitting}>
@@ -323,5 +632,5 @@ export default function CreateProjectPage() {
         </form>
       </div>
     </div>
-  )
+  );
 }
