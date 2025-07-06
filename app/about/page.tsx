@@ -22,7 +22,7 @@ export default function AboutPage() {
     },
     {
       name: "Bima Saputra",
-      role: "Co-Founder & COO",
+      role: "Co-Founder & CTO",
       image: "/images/team/bima.jpg",
     },
     {
