@@ -55,7 +55,8 @@ jobs:
           sudo /bin/systemctl enable mysql || { echo "❌ Gagal enable MySQL"; exit 1; }
 
           echo "🔥 Menjalankan semua proses PM2..."
-          pm2 start all || { echo "❌ Gagal menjalankan PM2"; exit 1; }
+          pm2 restart all || { echo "❌ Gagal menjalankan PM2"; exit 1; }
+          pm2 start ecosystem.config.js || { echo "❌ Gagal menjalankan ecosystem.config.js"; exit 1; }
           pm2 save || { echo "❌ Gagal menyimpan konfigurasi PM2"; exit 1; }
 
           echo "✅ Build selesai!"
