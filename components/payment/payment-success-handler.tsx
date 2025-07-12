@@ -1,44 +1,36 @@
-"use client"
+"use client";
 
-import { useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { toast } from "@/components/ui/use-toast"
+import { useEffect } from "react";
+import { useRouter } from "next/navigation"; // Tetap diimpor jika ada kebutuhan lain, tapi tidak digunakan untuk redirect otomatis
+import { toast } from "@/components/ui/use-toast";
 
 interface PaymentSuccessHandlerProps {
-  orderId: string
-  projectId: string
+  orderId: string;
+  projectId: string;
 }
 
-export default function PaymentSuccessHandler({ orderId, projectId }: PaymentSuccessHandlerProps) {
-  const router = useRouter()
+export default function PaymentSuccessHandler({
+  orderId,
+  projectId,
+}: PaymentSuccessHandlerProps) {
+  const router = useRouter(); // Tidak perlu useRouter jika tidak ada redirect otomatis
 
   useEffect(() => {
-    // Simulate payment success processing
-    const processPaymentSuccess = async () => {
-      try {
-        // In a real app, you might want to:
-        // 1. Verify payment status with Midtrans
-        // 2. Update local database
-        // 3. Send confirmation email
-        // 4. Update project funding in real-time
+    // Tampilkan pesan sukses hanya sekali saat komponen dimuat
+    toast({
+      title: "Pembayaran Berhasil! 🎉",
+      description:
+        "Terima kasih atas dukungan Anda. Dana akan segera diproses.",
+    });
 
-        // For now, we'll just show success message and redirect
-        toast({
-          title: "Pembayaran Berhasil! 🎉",
-          description: "Terima kasih atas dukungan Anda. Dana akan segera diproses.",
-        })
+    // Hapus logika setTimeout dan router.push di sini.
+    // Pengguna akan tetap di halaman ini setelah pesan sukses muncul.
+    // Mereka dapat kembali ke halaman proyek secara manual.
 
-        // Redirect back to project page after 3 seconds
-        setTimeout(() => {
-          router.push(`/projects/${projectId}`)
-        }, 3000)
-      } catch (error) {
-        console.error("Error processing payment success:", error)
-      }
-    }
+    // router.replace(`/projects/${projectId}`); // Redirect ke halaman proyek setelah sukses pembayaran
+  }, [orderId, projectId]); // orderId dan projectId tetap sebagai dependensi jika Anda ingin toast spesifik
 
-    processPaymentSuccess()
-  }, [orderId, projectId, router])
-
-  return null
+  // Komponen ini tidak perlu merender apapun secara visual,
+  // karena tujuannya hanya untuk memicu toast.
+  return null;
 }

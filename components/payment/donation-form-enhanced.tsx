@@ -11,11 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
-import {
-  formatCurrency,
-  calculatePlatformFee,
-  MIDTRANS_CONFIG,
-} from "@/lib/midtrans";
+import { formatCurrency, calculatePlatformFee } from "@/lib/midtrans";
 import {
   Heart,
   Gift,
@@ -26,29 +22,36 @@ import {
   Loader2,
   AlertCircle,
   CheckCircle,
-  LogIn, // Import icon login
+  LogIn,
 } from "lucide-react";
 
 import { useAuth } from "@/contexts/auth-context";
+import { sendFundingRequest } from "@/lib/funding-api";
+import { getProjectDetails, ProjectDetails } from "@/lib/project-details-api"; // Import the new API function and ProjectDetails type
+
+interface Reward {
+  id: string;
+  amount: number;
+  title: string;
+  description: string;
+  estimatedDelivery?: string;
+  limited?: boolean;
+  remaining?: number;
+  available?: boolean; // Added for consistency with previous dummy data structure
+}
 
 interface DonationFormProps {
   projectId: string;
-  projectTitle: string;
-  rewards?: Array<{
-    id: string;
-    amount: number;
-    title: string;
-    description: string;
-    estimatedDelivery?: string;
-    limited?: boolean;
-    remaining?: number;
-  }>;
+  projectTitle: string; // This prop will still be used for initial display
+  // The 'rewards' prop will now be internally managed by fetching from the API
+  // rewards?: Array<Reward>; // Removed as rewards will be fetched internally
+  onPaymentSuccess?: (data: any) => void; // Optional callback for payment success
 }
 
 export default function DonationFormEnhanced({
   projectId,
   projectTitle,
-  rewards = [],
+  onPaymentSuccess,
 }: DonationFormProps) {
   const router = useRouter();
   const { user, isLoading: isAuthLoading } = useAuth();
@@ -57,9 +60,17 @@ export default function DonationFormEnhanced({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
+  const [projectDetails, setProjectDetails] = useState<ProjectDetails | null>(
+    null
+  );
+  const [isLoadingProjectDetails, setIsLoadingProjectDetails] = useState(true);
+  const [projectDetailsError, setProjectDetailsError] = useState<string | null>(
+    null
+  );
+
   const [selectedAmount, setSelectedAmount] = useState<number>(0);
   const [customAmount, setCustomAmount] = useState<string>("");
-  const [selectedReward, setSelectedReward] = useState<string | null>(null);
+  const [selectedRewardId, setSelectedRewardId] = useState<string | null>(null); // Renamed to selectedRewardId for clarity
   const [donorInfo, setDonorInfo] = useState({
     firstName: "",
     lastName: "",
@@ -75,25 +86,51 @@ export default function DonationFormEnhanced({
 
   const predefinedAmounts = [25000, 50000, 100000, 250000, 500000, 1000000];
 
+  // Calculate platform fee and total amount based on selectedAmount
   const platformFee = calculatePlatformFee(selectedAmount);
   const totalAmount = selectedAmount + platformFee;
 
+  // Effect to fetch project details including rewards
   useEffect(() => {
-    const matchingReward = rewards.find(
-      (reward) => reward.amount === selectedAmount
-    );
-
-    if (matchingReward) {
-      if (selectedReward !== matchingReward.id) {
-        setSelectedReward(matchingReward.id);
+    const fetchDetails = async () => {
+      try {
+        setIsLoadingProjectDetails(true);
+        setProjectDetailsError(null);
+        const details = await getProjectDetails(projectId);
+        setProjectDetails(details);
+      } catch (err: any) {
+        setProjectDetailsError(err.message || "Gagal memuat detail proyek.");
+        console.error("Failed to fetch project details:", err);
+      } finally {
+        setIsLoadingProjectDetails(false);
       }
-    } else {
-      if (selectedReward !== null) {
-        setSelectedReward(null);
+    };
+
+    if (projectId) {
+      fetchDetails();
+    }
+  }, [projectId]); // Re-fetch if projectId changes
+
+  // Effect to update selectedReward if selectedAmount matches a reward
+  useEffect(() => {
+    if (projectDetails?.rewards) {
+      const matchingReward = projectDetails.rewards.find(
+        (reward) => reward.amount === selectedAmount
+      );
+
+      if (matchingReward) {
+        if (selectedRewardId !== matchingReward.id) {
+          setSelectedRewardId(matchingReward.id);
+        }
+      } else {
+        if (selectedRewardId !== null) {
+          setSelectedRewardId(null);
+        }
       }
     }
-  }, [selectedAmount, rewards, selectedReward]);
+  }, [selectedAmount, projectDetails?.rewards, selectedRewardId]);
 
+  // Effect to populate donor info from logged-in user
   useEffect(() => {
     if (!isAuthLoading && user) {
       setDonorInfo((prevInfo) => ({
@@ -118,79 +155,42 @@ export default function DonationFormEnhanced({
     }
   }, [user, isAuthLoading]);
 
-  const loadSnapScript = () => {
-    return new Promise((resolve, reject) => {
-      const existingScript = document.getElementById("midtrans-snap");
-      if (existingScript) {
-        existingScript.remove();
-      }
-
-      const script = document.createElement("script");
-      script.id = "midtrans-snap";
-      script.src = MIDTRANS_CONFIG.snapUrl;
-      // script.setAttribute("data-client-key", MIDTRANS_CLIENT_KEY); // Pastikan ini sudah didefinisikan atau diimpor
-      script.onload = resolve;
-      script.onerror = reject;
-      document.head.appendChild(script);
-    });
-  };
-
   const handlePayment = async () => {
     try {
       setIsLoading(true);
       setError(null);
+      setSuccess(null);
 
-      await loadSnapScript();
+      const payload = {
+        supportPackageId: selectedRewardId, // Use selectedRewardId here
+        projectId: projectId,
+        amount: selectedAmount,
+        isAnonymous: donorInfo.anonymous,
+        firstName: donorInfo.anonymous ? "anonymous" : donorInfo.firstName,
+        lastName: donorInfo.anonymous ? "" : donorInfo.lastName,
+        email: donorInfo.anonymous ? "anonymous@example.com" : donorInfo.email,
+        message: donorInfo.anonymous ? "" : donorInfo.message,
+      };
 
-      const response = await fetch("/api/payment/create", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          projectId,
-          amount: selectedAmount,
-          customerDetails: donorInfo,
-          rewardId: selectedReward,
-        }),
-      });
+      const result = await sendFundingRequest(payload);
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to create payment");
+      if (!result.success && !result.data) {
+        throw new Error(result.message || "Gagal mengirim permintaan donasi.");
       }
-
-      if (!data.token) {
-        throw new Error("No payment token received");
+      console.log("Funding request successful:", result);
+      setSuccess("Donasi Anda berhasil! Terima kasih atas dukungan Anda.");
+      onPaymentSuccess?.(result);
+      if (result.data?.redirectUrl) {
+        router.push(result.data.redirectUrl);
+      } else {
+        throw new Error("Redirect URL tidak ditemukan.");
       }
-
-      // @ts-ignore
-      window.snap.pay(data.token, {
-        onSuccess: (result: any) => {
-          console.log("Payment success:", result);
-          setSuccess("Pembayaran berhasil! Terima kasih atas donasi Anda.");
-          router.push(`/payment/success?order_id=${data.orderId}`);
-        },
-        onPending: (result: any) => {
-          console.log("Payment pending:", result);
-          router.push(`/payment/pending?order_id=${data.orderId}`);
-        },
-        onError: (result: any) => {
-          console.log("Payment error:", result);
-          setError("Pembayaran gagal. Silakan coba lagi.");
-        },
-        onClose: () => {
-          console.log("Payment popup closed");
-          setError("Pembayaran dibatalkan.");
-        },
-      });
     } catch (error) {
-      console.error("Payment error:", error);
+      console.error("Funding request error:", error);
       setError(
         error instanceof Error
           ? error.message
-          : "Terjadi kesalahan saat memproses pembayaran"
+          : "Terjadi kesalahan saat mengirim donasi. Silakan coba lagi."
       );
     } finally {
       setIsLoading(false);
@@ -214,9 +214,9 @@ export default function DonationFormEnhanced({
   };
 
   const handleRewardSelect = (rewardId: string, amount: number) => {
-    setSelectedReward(rewardId);
-    setSelectedAmount(amount);
-    setCustomAmount(amount.toString());
+    setSelectedRewardId(rewardId); // Set the ID of the selected reward
+    setSelectedAmount(amount); // Set the amount based on the reward
+    setCustomAmount(amount.toString()); // Update custom amount input
   };
 
   const handleAmountNext = () => {
@@ -248,19 +248,33 @@ export default function DonationFormEnhanced({
   };
 
   // --- START NEW LOGIC FOR LOGIN REQUIREMENT ---
-  // Tampilkan loading state jika AuthProvider masih memuat user
-  if (isAuthLoading) {
+  if (isAuthLoading || isLoadingProjectDetails) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
         <Loader2 className="h-10 w-10 animate-spin text-blue-500" />
         <span className="ml-3 text-lg text-gray-600">
-          Memuat data pengguna...
+          Memuat data {isLoadingProjectDetails ? "proyek" : "pengguna"}...
         </span>
       </div>
     );
   }
 
-  // Tampilkan pesan dan tombol login jika user belum login
+  if (projectDetailsError) {
+    return (
+      <div className="max-w-md mx-auto p-6 flex flex-col items-center justify-center min-h-[400px]">
+        <Alert className="mb-6 text-center border-red-200 bg-red-50">
+          <AlertCircle className="h-6 w-6 mx-auto text-red-600 mb-2" />
+          <AlertDescription className="text-red-800 text-base font-medium">
+            {projectDetailsError}
+          </AlertDescription>
+          <p className="text-sm text-gray-700 mt-2">
+            Silakan coba muat ulang halaman.
+          </p>
+        </Alert>
+      </div>
+    );
+  }
+
   if (!user) {
     return (
       <div className="max-w-md mx-auto p-6 flex flex-col items-center justify-center min-h-[400px]">
@@ -285,6 +299,20 @@ export default function DonationFormEnhanced({
     );
   }
   // --- END NEW LOGIC FOR LOGIN REQUIREMENT ---
+
+  // If projectDetails is null after loading, it means project was not found
+  if (!projectDetails) {
+    return (
+      <div className="max-w-md mx-auto p-6 flex flex-col items-center justify-center min-h-[400px]">
+        <Alert className="mb-6 text-center border-red-200 bg-red-50">
+          <AlertCircle className="h-6 w-6 mx-auto text-red-600 mb-2" />
+          <AlertDescription className="text-red-800 text-base font-medium">
+            Proyek tidak ditemukan.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-2xl mx-auto p-6">
@@ -393,44 +421,49 @@ export default function DonationFormEnhanced({
             </div>
 
             {/* Rewards */}
-            {rewards.length > 0 && (
+            {projectDetails.rewards.length > 0 && (
               <div>
                 <Label className="text-base font-medium mb-3 block flex items-center gap-2">
                   <Gift className="h-4 w-4" />
                   Pilih Reward (Opsional)
                 </Label>
                 <div className="space-y-3">
-                  {rewards.map((reward) => (
+                  {projectDetails.rewards.map((reward) => (
                     <div
                       key={reward.id}
-                      className={`border rounded-lg p-4 cursor-pointer transition-colors ${
-                        selectedReward === reward.id
+                      className={`flex items-center space-x-2 p-3 border rounded-md cursor-pointer transition-colors ${
+                        selectedRewardId === reward.id
                           ? "border-blue-500 bg-blue-50"
                           : "border-gray-200 hover:border-gray-300"
+                      } ${
+                        !reward.available ? "opacity-50 cursor-not-allowed" : ""
                       }`}
                       onClick={() =>
+                        reward.available &&
                         handleRewardSelect(reward.id, reward.amount)
                       }
                     >
-                      <div className="flex justify-between items-start mb-2">
+                      {/* Use RadioGroupItem if you want true radio button behavior */}
+                      {/* For simplicity, I'm keeping the div as clickable, but a RadioGroup would be more semantically correct */}
+                      <div>
                         <h4 className="font-medium">{reward.title}</h4>
-                        <Badge variant="secondary">
-                          {formatCurrency(reward.amount)}
-                        </Badge>
+                        <p className="text-sm text-gray-600">
+                          {reward.description}
+                        </p>
+                        {reward.estimatedDelivery && (
+                          <p className="text-xs text-gray-500">
+                            Estimasi Pengiriman: {reward.estimatedDelivery}
+                          </p>
+                        )}
+                        {reward.limited && reward.remaining && (
+                          <p className="text-xs text-orange-600 mt-1">
+                            Tersisa {reward.remaining} item
+                          </p>
+                        )}
                       </div>
-                      <p className="text-sm text-gray-600 mb-2">
-                        {reward.description}
-                      </p>
-                      {reward.estimatedDelivery && (
-                        <p className="text-xs text-gray-500">
-                          Estimasi pengiriman: {reward.estimatedDelivery}
-                        </p>
-                      )}
-                      {reward.limited && reward.remaining && (
-                        <p className="text-xs text-orange-600 mt-1">
-                          Tersisa {reward.remaining} item
-                        </p>
-                      )}
+                      <Badge variant="secondary" className="ml-auto">
+                        {formatCurrency(reward.amount)}
+                      </Badge>
                     </div>
                   ))}
                 </div>
@@ -536,6 +569,7 @@ export default function DonationFormEnhanced({
               />
             </div>
 
+            {/* If your backend API does not use 'phone', you might remove or comment this out */}
             {/* <div>
               <Label htmlFor="phone" className="flex items-center gap-2">
                 <Phone className="h-4 w-4" />
@@ -580,15 +614,17 @@ export default function DonationFormEnhanced({
                     anonymous: checked as boolean,
                   }));
                   if (checked) {
+                    // Clear personal info if anonymous is checked
                     setDonorInfo((prev) => ({
                       ...prev,
                       firstName: "",
                       lastName: "",
                       email: "",
-                      phone: "",
+                      phone: "", // Keep phone field in state to clear it
                       message: "",
                     }));
                   } else {
+                    // Restore user info if un-checked and user is logged in
                     if (user) {
                       setDonorInfo((prev) => ({
                         ...prev,
@@ -610,7 +646,7 @@ export default function DonationFormEnhanced({
               <h4 className="font-medium mb-2">Ringkasan Pembayaran</h4>
               <div className="space-y-1 text-sm">
                 <div className="flex justify-between">
-                  <span>Donasi untuk: {projectTitle}</span>
+                  <span>Donasi untuk: {projectDetails.title}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Jumlah donasi</span>
@@ -659,8 +695,8 @@ export default function DonationFormEnhanced({
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
               <p className="text-sm text-yellow-800">
                 <strong>Mode Sandbox:</strong> Ini adalah lingkungan testing.
-                Gunakan data test yang tersedia di Snap popup untuk simulasi
-                pembayaran.
+                Perilaku setelah pembayaran mungkin bergantung pada respons dari
+                backend Anda.
               </p>
             </div>
           </CardContent>

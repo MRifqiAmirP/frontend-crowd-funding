@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react"; // Import useEffect
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,8 +23,10 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/components/ui/use-toast";
-import { Upload, Info, Plus, Trash2 } from "lucide-react";
+import { Upload, Info, Plus, Trash2, Loader2, AlertCircle } from "lucide-react"; // Added Loader2, AlertCircle
 import { createProject } from "@/lib/project";
+import { getCategories, Category } from "@/lib/category-api"; // Import the new API function and Category type
+import { Alert, AlertDescription } from "@/components/ui/alert"; // Import Alert and AlertDescription
 
 export default function CreateProjectPage() {
   const router = useRouter();
@@ -36,7 +38,7 @@ export default function CreateProjectPage() {
 
   const [formData, setFormData] = useState({
     projectName: "",
-    category: "",
+    category: "", // This will store the category ID or name
     school: "",
     target: "",
     duration: "",
@@ -46,6 +48,36 @@ export default function CreateProjectPage() {
     galleries: [] as File[],
     videoUrl: "",
   });
+
+  const [categories, setCategories] = useState<Category[]>([]); // State to store fetched categories
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true); // Loading state for categories
+  const [categoryError, setCategoryError] = useState<string | null>(null); // Error state for categories
+
+  // Fetch categories on component mount
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        setIsLoadingCategories(true);
+        setCategoryError(null);
+        const fetchedCategories = await getCategories();
+        setCategories(fetchedCategories);
+        // Optionally set a default category if available
+        if (fetchedCategories.length > 0) {
+          setFormData((prev) => ({
+            ...prev,
+            category: fetchedCategories[0].category_name,
+          }));
+        }
+      } catch (err: any) {
+        setCategoryError(err.message || "Gagal memuat kategori.");
+        console.error("Failed to fetch categories:", err);
+      } finally {
+        setIsLoadingCategories(false);
+      }
+    };
+
+    fetchCategories();
+  }, []); // Empty dependency array means this runs once on mount
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -107,7 +139,7 @@ export default function CreateProjectPage() {
 
     // Mengembalikan properti ke level teratas FormData seperti yang diharapkan backend
     formApiData.append("projectName", formData.projectName);
-    formApiData.append("provider", formData.school);
+    formApiData.append("provider", formData.school); // Assuming provider is school
     formApiData.append("educationLevel", "Perguruan Tinggi"); // Sesuaikan jika dinamis
     formApiData.append("institutionName", formData.school);
     formApiData.append("shortDescription", formData.shortDescription);
@@ -122,7 +154,7 @@ export default function CreateProjectPage() {
     );
     formApiData.append("deadline", deadlineDate.toISOString().split("T")[0]);
 
-    formApiData.append("categoryNames", formData.category);
+    formApiData.append("categoryNames", formData.category); // Use selected category name/ID
 
     // Menambahkan thumbnail (kembali ke format file terpisah)
     console.log("formData.thumbnail before append:", formData.thumbnail);
@@ -149,17 +181,22 @@ export default function CreateProjectPage() {
       formData.galleries.map((f) => f.name)
     );
 
-    // ! REWARD TIDAK DISIMPAN
-    // const formattedRewards = rewards.map((reward) => ({
-    //   title: reward.title,
-    //   amount: parseInt(reward.amount),
-    //   description: reward.description,
-    // }));
-    // formApiData.append("rewards", JSON.stringify(formattedRewards));
-    // console.log(
-    //   "Rewards appended as JSON string:",
-    //   JSON.stringify(formattedRewards)
-    // );
+    // --- REWARD HANDLING START ---
+    // Iterate over the rewards state and append each reward's data
+    rewards.forEach((reward, index) => {
+      // Only append if the reward has a title and amount
+      if (reward.title && reward.amount) {
+        formApiData.append("supportPackagesName", reward.title);
+        // Ensure amount is a number before appending, as it's stored as string in state
+        formApiData.append("nominal", parseInt(reward.amount).toString());
+        formApiData.append("benefit", reward.description);
+      } else {
+        console.warn(
+          `Reward at index ${index} is incomplete and will not be sent.`
+        );
+      }
+    });
+    // --- REWARD HANDLING END ---
 
     // Menambahkan URL video jika ada
     if (formData.videoUrl) {
@@ -177,7 +214,8 @@ export default function CreateProjectPage() {
       toast({
         title: "Proyek berhasil dibuat!",
         description: "Proyek Anda sedang dalam peninjauan oleh tim kami.",
-        type: "success",
+        // @ts-ignore
+        type: "success", // Ensure 'success' is a valid type for your toast component
       });
       router.back();
     } catch (error: any) {
@@ -190,7 +228,8 @@ export default function CreateProjectPage() {
         description: Array.isArray(error.response?.data?.message)
           ? error.response.data.message.join(", ")
           : error.message || "Terjadi kesalahan saat membuat proyek.",
-        type: "error",
+        // @ts-ignore
+        type: "error", // Ensure 'error' is a valid type for your toast component
       });
     } finally {
       setIsSubmitting(false);
@@ -239,33 +278,37 @@ export default function CreateProjectPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="category">Kategori</Label>
-                        <Select
-                          value={formData.category}
-                          onValueChange={handleSelectChange}
-                          required
-                        >
-                          <SelectTrigger id="category">
-                            <SelectValue placeholder="Pilih kategori" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Teknologi">Teknologi</SelectItem>
-                            <SelectItem value="Edukasi">Edukasi</SelectItem>
-                            <SelectItem value="Lingkungan">
-                              Lingkungan
-                            </SelectItem>
-                            <SelectItem value="Kesehatan">Kesehatan</SelectItem>
-                            <SelectItem value="Sosial">Sosial</SelectItem>
-                            <SelectItem value="Agrikultur">
-                              Agrikultur
-                            </SelectItem>
-                            <SelectItem value="Seni & Budaya">
-                              Seni & Budaya
-                            </SelectItem>
-                            <SelectItem value="E-Commerce">
-                              E-Commerce
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
+                        {isLoadingCategories ? (
+                          <div className="flex items-center gap-2 text-gray-500">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <span>Memuat kategori...</span>
+                          </div>
+                        ) : categoryError ? (
+                          <Alert className="border-red-200 bg-red-50 text-red-800">
+                            <AlertCircle className="h-4 w-4" />
+                            <AlertDescription>{categoryError}</AlertDescription>
+                          </Alert>
+                        ) : (
+                          <Select
+                            value={formData.category}
+                            onValueChange={handleSelectChange}
+                            required
+                          >
+                            <SelectTrigger id="category">
+                              <SelectValue placeholder="Pilih kategori" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {categories.map((cat) => (
+                                <SelectItem
+                                  key={cat.id}
+                                  value={cat.category_name.toLowerCase()}
+                                >
+                                  {cat.category_name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
                       </div>
 
                       <div className="space-y-2">

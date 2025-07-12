@@ -1,27 +1,105 @@
 "use client";
 
+import { useState, useEffect } from "react"; // Import useState and useEffect
 import Image from "next/image";
 import Link from "next/link";
-import { Share2 } from "lucide-react";
+import { Share2, Loader2, AlertCircle } from "lucide-react"; // Added Loader2 and AlertCircle
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageTransition } from "@/components/ui/page-transition";
-import DonationForm from "@/components/donation-form";
+import DonationFormEnhanced from "@/components/payment/donation-form-enhanced"; // Using DonationFormEnhanced
 import ProjectUpdates from "@/components/project-updates";
 import ProjectComments from "@/components/project-comments";
 import VideoPlayer from "@/components/video-player";
 import ImageGallery from "@/components/image-gallery";
-import { featuredProjects } from "@/lib/dummy-data";
 import RealTimeFunding from "@/components/real-time-funding";
+import {
+  getProjectDetails,
+  ProjectDetails,
+  GalleryItem,
+} from "@/lib/project-details-api"; // Import the API function, ProjectDetails type, and GalleryItem
+import { Alert, AlertDescription } from "@/components/ui/alert"; // Import Alert and AlertDescription
 
 export default function ProjectDetailPage({
   params,
 }: {
   params: { id: string };
 }) {
-  // Find project from dummy data
-  const project =
-    featuredProjects.find((p) => p.id === params.id) || featuredProjects[0];
+  const [project, setProject] = useState<ProjectDetails | null>(null); // State to store fetched project details
+  const [isLoading, setIsLoading] = useState(true); // Loading state for project details
+  const [error, setError] = useState<string | null>(null); // Error state for project details
+
+  // Fetch project details on component mount or when params.id changes
+  useEffect(() => {
+    const fetchProject = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const fetchedProject = await getProjectDetails(params.id);
+        setProject(fetchedProject);
+      } catch (err: any) {
+        setError(err.message || "Gagal memuat detail proyek.");
+        console.error("Failed to fetch project details:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (params.id) {
+      fetchProject();
+    }
+  }, [params.id]); // Dependency array includes params.id to refetch if ID changes
+
+  // Handle loading state
+  if (isLoading) {
+    return (
+      <PageTransition>
+        <div className="container mx-auto px-4 py-8 flex flex-col items-center justify-center min-h-screen">
+          <Loader2 className="h-10 w-10 animate-spin text-blue-500" />
+          <p className="mt-4 text-lg text-gray-600">Memuat detail proyek...</p>
+        </div>
+      </PageTransition>
+    );
+  }
+
+  // Handle error state
+  if (error) {
+    return (
+      <PageTransition>
+        <div className="container mx-auto px-4 py-8 max-w-md mx-auto text-center">
+          <Alert className="mb-6 border-red-200 bg-red-50">
+            <AlertCircle className="h-6 w-6 mx-auto text-red-600 mb-2" />
+            <AlertDescription className="text-red-800 text-base font-medium">
+              {error}
+            </AlertDescription>
+            <p className="text-sm text-gray-700 mt-2">
+              Silakan coba muat ulang halaman atau kembali ke{" "}
+              <Link href="/projects" className="text-blue-600 hover:underline">
+                halaman proyek
+              </Link>
+            </p>
+          </Alert>
+        </div>
+      </PageTransition>
+    );
+  }
+
+  // Handle project not found (if API returns null or empty data)
+  if (!project) {
+    return (
+      <PageTransition>
+        <div className="container mx-auto px-4 py-8 text-center">
+          <h2 className="text-2xl font-bold mb-4">Proyek Tidak Ditemukan</h2>
+          <p className="text-gray-600">
+            Maaf, proyek yang Anda cari tidak ditemukan. Silakan kembali ke{" "}
+            <Link href="/projects" className="text-blue-600 hover:underline">
+              halaman proyek
+            </Link>
+          </p>
+        </div>
+      </PageTransition>
+    );
+  }
 
   const percentFunded = Math.min(
     Math.round((project.currentFunding / project.targetFunding) * 100),
@@ -37,32 +115,6 @@ export default function ProjectDetailPage({
       maximumFractionDigits: 0,
     }).format(amount);
   };
-
-  const rewards = [
-    {
-      id: "1",
-      title: "Supporter",
-      amount: 50000,
-      description: "Ucapan terima kasih di media sosial dan newsletter kami",
-      backers: 15,
-    },
-    {
-      id: "2",
-      title: "Early Bird",
-      amount: 100000,
-      description:
-        "1 produk edisi khusus + ucapan terima kasih di media sosial",
-      backers: 20,
-    },
-    {
-      id: "3",
-      title: "Premium Bundle",
-      amount: 250000,
-      description:
-        "3 produk edisi khusus + nama Anda di website kami sebagai pendukung",
-      backers: 7,
-    },
-  ];
 
   return (
     <PageTransition>
@@ -80,9 +132,10 @@ export default function ProjectDetailPage({
             <div className="mb-6">
               <VideoPlayer
                 videoUrl={
-                  project.video || "https://www.youtube.com/embed/Iqr3XIhSnUQ"
+                  project.videoUrl ||
+                  "https://www.youtube.com/embed/Iqr3XIhSnUQ" // Use project.videoUrl
                 }
-                thumbnailUrl={project.image}
+                thumbnailUrl={project.image} // Use project.image (mapped from thumbnailUrl)
                 title={project.title}
               />
             </div>
@@ -114,13 +167,13 @@ export default function ProjectDetailPage({
                     Tentang Proyek Ini
                   </h3>
                   <p className="mb-4">
-                    Proyek ini merupakan inovasi yang dikembangkan oleh tim{" "}
-                    {project.creator.name} dengan tujuan memberikan solusi nyata
-                    untuk permasalahan yang ada di masyarakat. Dengan pendekatan
-                    yang berkelanjutan dan ramah lingkungan, kami berkomitmen
-                    untuk menciptakan dampak positif.
+                    {/* Use fullDescription if available, otherwise aboutProject, or a fallback */}
+                    {project.fullDescription ||
+                      project.aboutProject ||
+                      "Deskripsi lengkap proyek ini akan segera ditambahkan."}
                   </p>
 
+                  {/* You'll need to adapt these sections based on what your API provides */}
                   <h3 className="text-xl font-semibold mb-4">
                     Rencana Penggunaan Dana
                   </h3>
@@ -146,8 +199,14 @@ export default function ProjectDetailPage({
               <TabsContent value="galeri">
                 <div className="space-y-6">
                   <h3 className="text-xl font-semibold">Galeri Proyek</h3>
+                  {/* project.galleries is an array of objects with imageUrl, title, caption */}
                   <ImageGallery
-                    images={project.gallery || []}
+                    images={
+                      project.galleries.map((g: GalleryItem) => ({
+                        src: g.imageUrl,
+                        alt: g.title || g.caption || "Project Image",
+                      })) || []
+                    }
                     title={project.title}
                   />
                 </div>
@@ -170,9 +229,11 @@ export default function ProjectDetailPage({
                 showRecentDonations={true}
                 compact={false}
               />
-
-              <DonationForm projectId={project.id} rewards={rewards} />
-
+              <DonationFormEnhanced
+                projectId={project.id}
+                projectTitle={project.title}
+              />{" "}
+              {/* Pass projectTitle */}
               <div className="mt-4">
                 <Button
                   variant="outline"
@@ -188,22 +249,27 @@ export default function ProjectDetailPage({
               <h3 className="text-lg font-semibold mb-4">Tentang Kreator</h3>
               <div className="flex items-center mb-4">
                 <div className="relative w-12 h-12 mr-4">
+                  {/* Assuming creator image is not directly available from current API */}
                   <Image
-                    src={project.creator.image || "/placeholder.svg"}
-                    alt={project.creator.name}
+                    src="/placeholder.svg" // Placeholder for creator image
+                    alt="Creator"
                     fill
                     className="rounded-full object-cover"
                   />
                 </div>
                 <div>
-                  <h4 className="font-semibold">{project.creator.name}</h4>
+                  <h4 className="font-semibold">{project.provider}</h4>{" "}
+                  {/* Using provider as creator name */}
                   <p className="text-sm text-gray-600">
-                    {project.creator.projects} proyek
+                    {/* project.creator.projects || "N/A" */}{" "}
+                    {/* Projects count not available */}
                   </p>
                 </div>
               </div>
               <p className="text-sm text-gray-700 mb-4">
-                {project.creator.bio}
+                {/* project.creator.bio || "Bio kreator akan segera ditambahkan." */}{" "}
+                {/* Creator bio not available */}
+                Proyek ini dibuat oleh tim dari {project.institutionName}.
               </p>
               <Button variant="outline" className="w-full">
                 Hubungi Kreator
