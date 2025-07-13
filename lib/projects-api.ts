@@ -91,7 +91,8 @@ export const getProjects = async (): Promise<Project[]> => {
                 id: rawProject.id,
                 title: rawProject.projectName,
                 description: rawProject.shortDescription,
-                image: rawProject.thumbnailUrl || "/placeholder.svg", // Use placeholder if no thumbnail
+                image: "https://picsum.photos/800/600", // Use placeholder if no thumbnail
+                // image: rawProject.thumbnailUrl || "https://picsum.photos/800/600", // Use placeholder if no thumbnail
                 // Take the first category name, or an empty string if no categories
                 category: rawProject.categories.length > 0 ? rawProject.categories[0].category.category_name : "Uncategorized",
                 school: rawProject.institutionName,
